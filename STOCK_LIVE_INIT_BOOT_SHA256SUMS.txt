@@ -1,0 +1,2 @@
+7d57db8a3eb7e7544bdb18a313eec6dbe03d09a2e19dd962cc56f620904e5a92  /home/kali/pacextractor/pac_out/init_boot.img
+4a6563154596ab31558ffbda94523c251ab2292567c1384fcffd74f9c02362b6  ../slot_a_ordered/04_init_boot_a_live.img

@@ -1,0 +1,2 @@
+a30d4d8bc891320613f973153bf226fb1e580d9943fa1bc65025282584fbb6b5  /home/kali/pacextractor/pac_out/vbmeta-sign.img
+6935f498ac76f8f175e64f3d51fa6db8aa398cdf2ac1d5b0a190ad2dbca74715  ../slot_a_ordered/00_vbmeta_a_live.img

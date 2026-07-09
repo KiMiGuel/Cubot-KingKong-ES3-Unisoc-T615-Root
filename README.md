@@ -1,838 +1,197 @@
-# Cubot KingKong ES 3 — Unisoc T615 Bootloader Unlock & Root
+# Cubot KingKong ES3 Unisoc T615 Root Research
 
-> **Verified Working Guide** | Unisoc T615 / UMS9230_6h10 | UFS | A/B Partitioning
-> **Status:** Bootloader unlocked, FDL2 access confirmed, Magisk root confirmed
-> **Build:** `CUBOT_KINGKONG_ES_3_F071_V16_20260309`
-> **Host Environment:** Kali Linux / Raspberry Pi 4 recommended
-> **Verified:** 2026-06-23 / 2026-06-24 by live testing
+This repository documents boot-chain, AVB, Magisk/root-state, and kernel-module feasibility research for the Cubot KingKong ES3.
 
----
+It is an analysis and documentation repo. Raw firmware images, PAC files, partition dumps, and extracted proprietary firmware trees are intentionally not stored here.
 
-## ⚠️ Warnings & Disclaimer
+## Device
 
-* **This guide will wipe your data.** Flashing `misc-wipe.bin` triggers a factory reset to remove old Android encryption keys.
-* **BROM access is your safety net.** As long as you can still enter BROM mode, you may be able to recover from many soft-brick situations.
-* **Fastboot unlock commands are not implemented on this device.** Commands like `fastboot flashing unlock` or `fastboot oem unlock` may return `unknown cmd` or fail.
-* **A/B slots:** This device uses A/B partitioning. Be aware of the active slot before flashing boot-critical partitions, or you may run into slot-mismatch boot issues.
-* **Use the correct firmware files.** Using FDL files, bootloader files, or partition images from another device can brick your phone.
-* **Use Linux for critical BROM/FDL work.** macOS libusb behavior can be unstable with Unisoc BROM mode.
+| Field | Value |
+|---|---|
+| Device | Cubot KingKong ES3 |
+| SoC | Unisoc T615 / ums9230-family |
+| Android build | `CUBOT_KINGKONG_ES_3_F071_V16_20260309` |
+| Running kernel | `5.15.178-android13-8-00012-g4ea0fcb5d130-ab13530115` |
+| Active slot analyzed | slot A |
+| Storage | UFS |
+| UFS command-line evidence | `sprdoot.flash=ufs` |
+| Root state | Magisk-rooted with NetHunter Lite |
 
-No warranty is provided. You are responsible for any damage, data loss, boot failure, or device brick.
+## Current Status
 
----
+The phone is rooted, but it is running the stock kernel.
 
-## Table of Contents
+The active boot chain is mostly stock:
 
-* [Device Profile](#device-profile)
-* [Compatibility](#compatibility)
-* [What You Need](#what-you-need)
-* [Critical Discovery](#critical-discovery)
-* [Step-by-Step: FDL2 Access](#step-by-step-fdl2-access)
-* [Step-by-Step: Bootloader Unlock](#step-by-step-bootloader-unlock)
-* [Step-by-Step: Magisk Root](#step-by-step-magisk-root)
-* [Step-by-Step: NetHunter Install](#step-by-step-nethunter-install)
-* [The WiFi Reality](#the-wifi-reality)
-* [Troubleshooting](#troubleshooting)
-* [Files Reference](#files-reference)
-* [Verified Working Commands](#verified-working-commands)
-* [Changelog](#changelog)
-* [Credits](#credits)
+| Partition | Finding |
+|---|---|
+| `boot_a` | Byte-for-byte stock PAC `boot-gki.img` |
+| `init_boot_a` | Magisk-patched and carrying root |
+| `vendor_boot_a` | Byte-for-byte stock PAC `vendor_boot.img` |
+| `dtbo_a` | Byte-for-byte stock PAC `dtbo.img` |
+| `vbmeta_a` | One-byte modified flags field; descriptors match stock |
 
----
+The root source is patched `init_boot_a`, not `boot_a`.
 
-## Device Profile
+## Rooting Model Confirmed by the Evidence
 
-| Field                      | Observed Value                          |
-| -------------------------- | --------------------------------------- |
-| Device                     | Cubot KingKong ES 3                     |
-| SoC                        | Unisoc T615 / UMS9230_6h10              |
-| Build Number               | `CUBOT_KINGKONG_ES_3_F071_V16_20260309` |
-| Storage                    | **UFS**                                 |
-| Partition Layout           | A/B slots                               |
-| BROM                       | SPRD3                                   |
-| Boot Key                   | Volume Down while plugging USB          |
-| Magisk Target              | `boot.img` / `boot_a`                   |
-| NetHunter Status           | Installable                             |
-| Built-in WiFi Monitor Mode | Not supported                           |
-
-This device was initially assumed to be EMMC during early research, but live testing confirmed it uses **UFS** storage.
-
----
-
-## Compatibility
-
-### Verified Working
-
-* Cubot KingKong ES 3
-* Unisoc T615 / UMS9230_6h10
-* SPRD3 BROM
-* UFS storage
-* A/B partitioning
-
-### Likely Similar
-
-These may use similar patterns, but are not fully verified in this guide:
-
-* Unisoc T615 devices
-* Unisoc T606 / UMS9230 variants
-* Unisoc T616 / UMS9230 variants
-* Other SPRD3 / UMS9230 devices
-
-### Not Covered
-
-* MediaTek devices
-* Qualcomm devices
-* Samsung Exynos devices
-* Unisoc T610 / T618 devices
-* Unisoc T700 / T770 devices
-* Devices with patched BROM
-* Devices with different FDL load addresses
-
-### Basic Compatibility Check
-
-Power off the phone, hold **Volume Down**, and plug in USB.
-
-On Linux:
-
-```bash
-lsusb | grep "1782:4d00"
-```
-
-If BROM mode is active, you may see:
+The analyzed rooted state looks like this:
 
 ```text
-Spreadtrum Communications Inc.
-1782:4d00
+unlocked/orange LK bootloader
+  |
+  v
+modified vbmeta_a flags byte, stock descriptors
+  |
+  v
+stock boot_a kernel
+  |
+  v
+stock vendor_boot_a and stock dtbo_a
+  |
+  v
+Magisk-patched init_boot_a
+  |
+  v
+Magisk root
 ```
 
-If `CHECK_BAUD` returns `SPRD3` and `CMD_CONNECT` works with `spd_dump`, the device is likely compatible with this method.
+This means:
 
----
+- Magisk root works from `init_boot_a`.
+- The active kernel is still stock.
+- A rooted phone is not proof that the custom kernel candidate works.
+- Future kernel work must match the live stock kernel ABI or solve the module/header environment first.
 
-## What You Need
+For a cleaner guide to the process and the evidence behind it, see `ROOTING_GUIDE.md`.
 
-### Hardware
+## Major Findings
 
-* Cubot KingKong ES 3 or compatible Unisoc UMS9230 device
-* USB-C cable
-* Linux machine
-* Kali Linux recommended
-* Optional USB-C OTG adapter
-* Optional external USB WiFi adapter for NetHunter monitor mode / injection
+### boot_a
 
-### Required Files
+Live `boot_a` is byte-for-byte identical to stock PAC `boot-gki.img`.
 
-Place all unlock files in:
+Stock/live unpacked kernel hash:
 
 ```text
-~/cubot_unlock/
+8b9584d8518c79ab80c114143e1190b7e8e9058964adc8cffde98c53f083a532
 ```
 
-Required files:
+Custom candidate kernel hash:
 
 ```text
-custom_exec_no_verify_65015f08.bin
-fdl1-dl.bin
-fdl2-dl.bin
-splloader.bin
-misc-wipe.bin
-spd_dump
+773d9adcb8c20f954a584fcc84b147452028074c148b82fb4983bf2b3dee132a
 ```
 
-Optional or backup files:
+### init_boot_a
+
+Live `init_boot_a` is Magisk-patched. Evidence includes:
 
 ```text
-uboot.bin
-uboot_bak.bin
-splloader_og.bin
-boot_a.bin
-boot_b.bin
-vendor_boot_a.bin
-dtb_a.bin
+.backup/.magisk
+.backup/init.xz
+.backup/.rmlist
+overlay.d/sbin/magisk.xz
+overlay.d/sbin/init-ld.xz
+overlay.d/sbin/stub.xz
 ```
 
-### Tools
+### vendor_boot_a
 
-* `spd_dump`
-* `adb`
-* `git`
-* `make`
-* Magisk app
-* NetHunter app
+Live `vendor_boot_a` is stock. It contains the stock DTB, bootconfig, vendor ramdisk, first-stage fstab, and 157 stock vendor modules.
 
----
-
-## Get FDL Files
-
-The safest source is your device's own stock firmware PAC file.
-
-Extract:
+Bootconfig:
 
 ```text
-fdl1-dl.bin
-fdl2-dl.bin
+androidboot.hardware=ums9230_6h10
 ```
 
-These may appear in firmware packages under names such as:
+Boot-critical stock-matching modules include:
 
 ```text
-fdl1.bin
-fdl2.bin
-splloader.bin
-uboot.bin
+ufs_sprd.ko
+sc2730-regulator.ko
+sprd-pmic-spi.ko
+printk_cpuid.ko
+rpmb.ko
+regmap-hook.ko
 ```
 
-Do not blindly use FDL files from another device. That is an excellent way to turn a phone into a very expensive rectangle.
+### dtbo_a
 
----
+Live `dtbo_a` is stock. It contains 13 DTBO entries, all matching stock after extraction and decompilation.
 
-## Build `spd_dump`
-
-Clone the tool source:
-
-```bash
-git clone https://github.com/TomKing062/spreadtrum_flash.git
-```
-
-Enter the folder:
-
-```bash
-cd spreadtrum_flash
-```
-
-Build it:
-
-```bash
-make
-```
-
-Create the unlock folder:
-
-```bash
-mkdir -p ~/cubot_unlock
-```
-
-Copy `spd_dump`:
-
-```bash
-cp spd_dump ~/cubot_unlock/
-```
-
-Make it executable:
-
-```bash
-chmod +x ~/cubot_unlock/spd_dump
-```
-
----
-
-## Prepare Unlock Folder
-
-Go to the unlock folder:
-
-```bash
-cd ~/cubot_unlock
-```
-
-Expected example:
+DTBO confirms UFS and regulator-related overlay evidence, including:
 
 ```text
-~/cubot_unlock/
-├── custom_exec_no_verify_65015f08.bin
-├── fdl1-dl.bin
-├── fdl2-dl.bin
-├── misc-wipe.bin
-├── spd_dump
-└── splloader.bin
+20200000.ufs
+regulator-name = "vddvbus"
+regulator-always-on
+avdd12-supply
+vddwcn
+pmic_regulator
 ```
 
----
+### vbmeta_a
 
-## Critical Discovery
+Live `vbmeta_a` differs from stock by exactly one byte in the signed AVB header flags field.
 
-After repeated failed attempts with `exec_addr` and `exec_addr2`, the clean working exploit delivery method for this device was verified as:
+| Field | Stock | Live |
+|---|---:|---:|
+| Flags | `0` | `33554432` |
 
-```text
-loadexec custom_exec_no_verify_65015f08.bin
-```
+All descriptors, keys, rollback metadata, release string, and build properties match stock. Live `vbmeta_a` fails `avbtool` signature verification, which fits the unlocked/orange LK bootloader state.
 
-The filename matters.
+## Report Index
 
-The payload must be named exactly:
+Start here:
 
-```text
-custom_exec_no_verify_65015f08.bin
-```
+- `BOOT_CHAIN_FINDINGS.md`
+- `REPORT_INDEX.md`
+- `ROOTING_GUIDE.md`
+- `NEXT_PHASE_HEADERS_MODULES_PLAN.md`
 
-The address is parsed from the filename:
+Component reports:
 
-```text
-65015f08
-```
+- `REPORT_3WAY_BOOT_COMPARISON.md`
+- `REPORT_INIT_BOOT_STOCK_VS_LIVE.md`
+- `REPORT_VENDOR_BOOT_STOCK_VS_LIVE.md`
+- `REPORT_DTBO_STOCK_VS_LIVE.md`
+- `REPORT_VBMETA_STOCK_VS_LIVE.md`
 
-Manual `exec_addr` and `exec_addr2` attempts failed on this device. During testing, the BROM crashed on the first FDL1 data packet when using those older methods, but stayed alive and completed the chain when using `loadexec`.
+Evidence summaries:
 
-### Why `loadexec` Matters
+- `IMAGE_METADATA.txt`
+- `EXTRACTED_TREE_SUMMARY.txt`
+- `SEARCH_HITS_BOOT_CRITICAL.txt`
+- `ACTIVE_SLOT_A_SHA256SUMS.txt`
 
-The likely practical difference:
+## Raw Firmware Policy
 
-* `exec_addr` sends the payload as a raw binary at a manually supplied address.
-* `loadexec` handles payload delivery differently.
-* The filename-based address reduces manual address entry mistakes.
-* On this UMS9230_6h10 target, `loadexec` is the verified working path.
+The following are intentionally excluded from git:
 
-Do not rename the payload unless you know exactly what you are doing.
+- raw `.img` partition dumps
+- `.bin` bootloader or firmware binaries
+- `.pac` firmware packages
+- extracted firmware trees
+- generated comparison extraction directories
+- archives and partial downloads
 
-Wrong names may break the chain.
+The reports include hashes, metadata, and analysis results without storing proprietary raw firmware content.
 
----
+## Next Phase
 
-## Step-by-Step: FDL2 Access
+The next main task is not another boot-chain identity check. That phase is complete.
 
-From Linux:
+Next phase:
 
-```bash
-cd ~/cubot_unlock
-```
+- build a live Android 5.15 kernel header/module environment
+- use `/proc/config.gz`
+- use `/sys/kernel/kheaders.tar.xz`
+- validate `CONFIG_MODVERSIONS`
+- test a minimal external module
+- evaluate whether USB Wi-Fi, Bluetooth, or HID modules are realistic
 
-Run the verified command:
+Plan: `NEXT_PHASE_HEADERS_MODULES_PLAN.md`.
 
-```bash
-sudo ./spd_dump --verbose 2 --wait 300 loadexec custom_exec_no_verify_65015f08.bin fdl fdl1-dl.bin 0x65000800 fdl fdl2-dl.bin 0x9efffe00 exec
-```
-
-### Phone Steps
-
-1. Power off the phone completely.
-2. Hold **Volume Down**.
-3. While holding Volume Down, plug in USB.
-4. Keep holding until `spd_dump` connects.
-
-Expected signs of success:
-
-```text
-CHECK_BAUD bootrom
-BSL_REP_VER: "SPRD3"
-CMD_CONNECT bootrom
-SEND fdl1-dl.bin to 0x65000800
-EXEC FDL1
-SEND fdl2-dl.bin to 0x9efffe00
-FDL2 >
-```
-
-If you reach:
-
-```text
-FDL2 >
-```
-
-you have FDL2 access.
-
-That is the important part.
-
----
-
-## Step-by-Step: Bootloader Unlock
-
-At the `FDL2>` prompt, flash the patched bootloader:
-
-```text
-w splloader splloader.bin
-```
-
-Trigger the factory reset:
-
-```text
-w misc misc-wipe.bin
-```
-
-Reboot:
-
-```text
-reset
-```
-
-The phone should:
-
-1. Reboot.
-2. Show recovery / wipe progress.
-3. Boot to the Android setup screen.
-4. Come back with the bootloader unlocked.
-
-### Why the Wipe Is Recommended
-
-`misc-wipe.bin` triggers a factory reset.
-
-This removes old Android security state and avoids encryption or boot state mismatch after the bootloader unlock.
-
-Skipping the wipe may leave the device unstable or unable to boot cleanly.
-
----
-
-## Step-by-Step: Magisk Root
-
-After bootloader unlock and initial Android setup, install Magisk.
-
-### Method A: Direct Install
-
-This is the easiest method if Magisk supports it after unlock.
-
-1. Install the Magisk APK.
-2. Open Magisk.
-3. Choose **Install**.
-4. Choose **Direct Install**.
-5. Reboot.
-6. Verify root.
-
-Verify with:
-
-```bash
-adb shell su -c "id"
-```
-
-Expected result:
-
-```text
-uid=0(root)
-```
-
-### Method B: Patch Boot Image Through FDL2
-
-If Direct Install does not work, patch and flash manually.
-
-At the `FDL2>` prompt:
-
-```text
-r boot_a
-```
-
-Copy the dumped image to the phone:
-
-```bash
-adb push boot_a.bin /sdcard/Download/
-```
-
-Patch it in Magisk:
-
-```text
-Magisk → Install → Select and Patch a File → boot_a.bin
-```
-
-Pull the patched file back:
-
-```bash
-adb pull /sdcard/Download/magisk_patched-*.img
-```
-
-Boot into FDL2 again and flash:
-
-```text
-w boot_a magisk_patched.img
-```
-
-Reboot:
-
-```text
-reset
-```
-
-### Method C: Fastboot
-
-If fastboot works after unlock:
-
-```bash
-adb reboot bootloader
-```
-
-Then:
-
-```bash
-fastboot flash boot_a magisk_patched.img
-```
-
-Then:
-
-```bash
-fastboot reboot
-```
-
-If fastboot commands are not implemented on your build, use FDL2 instead.
-
----
-
-## Step-by-Step: NetHunter Install
-
-After Magisk root works:
-
-1. Download NetHunter from:
-
-```text
-https://store.nethunter.com/
-```
-
-2. Install the NetHunter app.
-3. Open NetHunter.
-4. Grant root access in Magisk.
-5. Open Kali Chroot Manager.
-6. Install Kali Chroot.
-7. Choose Minimal or Full.
-8. Wait for installation.
-
-Minimal chroot generally needs around:
-
-```text
-2GB+
-```
-
-Full chroot may need around:
-
-```text
-4GB-5GB+
-```
-
-### Manual NetHunter Chroot Install
-
-If the in-app download fails, download the rootfs manually:
-
-```bash
-wget https://kali.download/nethunter-images/current/rootfs/kalifs-arm64-minimal.tar.xz
-```
-
-Push it to the phone:
-
-```bash
-adb push kalifs-arm64-minimal.tar.xz /sdcard/
-```
-
-Then in NetHunter:
-
-```text
-Kali Chroot Manager → Install from SDCard
-```
-
-Select the `.tar.xz` file.
-
----
-
-## The WiFi Reality
-
-The built-in WiFi does **not** support monitor mode.
-
-This is not a simple kernel config issue.
-
-The device uses the proprietary Unisoc WiFi driver:
-
-```text
-sprd_wlan_combo
-```
-
-Observed behavior:
-
-* `wlan0` supports normal WiFi client mode.
-* `wlan0` supports AP mode.
-* `wlan0` supports P2P mode.
-* `wlan0` does not expose monitor mode.
-* Packet injection does not work on built-in WiFi.
-* This is a driver limitation.
-
-For monitor mode and injection, use an external USB WiFi adapter.
-
-Recommended adapters:
-
-```text
-Alfa AWUS036ACH
-TP-Link TL-WN722N v1
-```
-
-Expected NetHunter path:
-
-```text
-External adapter → USB-C OTG → wlan1 or wlan2 → monitor mode
-```
-
-Example:
-
-```bash
-airmon-ng start wlan1
-```
-
-A custom kernel may still be useful for other things, but it will not magically make the proprietary `sprd_wlan_combo` driver expose monitor mode. The bottleneck is the driver stack, not just the kernel config.
-
----
-
-## Troubleshooting
-
-### `LIBUSB_ERROR_TIMEOUT`
-
-Possible causes:
-
-* Phone is not fully in BROM mode.
-* Wrong timing.
-* Bad USB cable.
-* macOS libusb instability.
-
-Fix:
-
-* Use Linux.
-* Power off completely.
-* Hold Volume Down before plugging USB.
-* Keep holding until connection starts.
-* Try another USB cable or USB port.
-
----
-
-### `LIBUSB_ERROR_IO` on FDL1 Packet
-
-Likely cause:
-
-```text
-You are using exec_addr or exec_addr2.
-```
-
-Fix:
-
-```text
-Use loadexec only.
-```
-
-Correct command:
-
-```bash
-sudo ./spd_dump --verbose 2 --wait 300 loadexec custom_exec_no_verify_65015f08.bin fdl fdl1-dl.bin 0x65000800 fdl fdl2-dl.bin 0x9efffe00 exec
-```
-
----
-
-### `wrong command or wrong mode detected`
-
-Likely cause:
-
-```text
-BROM crashed.
-```
-
-Fix:
-
-1. Unplug USB.
-2. Hold Power + Volume Up for around 10 seconds.
-3. Wait around 10 seconds.
-4. Try BROM entry again.
-
----
-
-### `FDL2: incompatible partition`
-
-This may be non-fatal.
-
-If FDL2 still loads and you get:
-
-```text
-FDL2 >
-```
-
-continue carefully.
-
----
-
-### Phone Will Not Enter BROM
-
-Try:
-
-```text
-Volume Down
-```
-
-If that fails:
-
-```text
-Volume Up
-```
-
-If that fails:
-
-```text
-Volume Up + Volume Down
-```
-
-Also check:
-
-* Battery charge
-* USB cable
-* USB port
-* Whether the phone is fully powered off
-
----
-
-### Magisk Direct Install Fails
-
-Try the manual patch method.
-
-Basic flow:
-
-```text
-Dump boot_a → patch with Magisk → flash patched image through FDL2
-```
-
----
-
-### NetHunter Chroot Download Fails
-
-Check:
-
-* Free space on `/data`
-* Root access granted in Magisk
-* Network connection
-* NetHunter app permissions
-
-Fallback:
-
-```text
-Use manual install from tar.xz
-```
-
----
-
-### No Monitor Mode on `wlan0`
-
-Expected.
-
-Use an external USB WiFi adapter.
-
----
-
-## Files Reference
-
-Example unlock folder:
-
-```text
-~/cubot_unlock/
-├── custom_exec_no_verify_65015f08.bin
-├── fdl1-dl.bin
-├── fdl2-dl.bin
-├── spd_dump
-├── splloader.bin
-├── misc-wipe.bin
-├── uboot.bin
-├── uboot_bak.bin
-└── splloader_og.bin
-```
-
-Observed partition notes from live testing:
-
-```text
-boot_a / boot_b: 64MB each
-vendor_boot_a / vendor_boot_b: 100MB each
-dtb_a / dtb_b: 8MB each
-init_boot_a / init_boot_b: 8MB each
-super: 5600MB
-userdata: ~237151MB
-storage type: UFS
-total partitions: 74
-```
-
----
-
-## Verified Working Commands
-
-### FDL2 Access
-
-```bash
-sudo ./spd_dump --verbose 2 --wait 300 loadexec custom_exec_no_verify_65015f08.bin fdl fdl1-dl.bin 0x65000800 fdl fdl2-dl.bin 0x9efffe00 exec
-```
-
-### Bootloader Unlock
-
-```text
-w splloader splloader.bin
-w misc misc-wipe.bin
-reset
-```
-
-### Backup Commands
-
-```text
-r boot_a
-r boot_b
-r dtb_a
-r vendor_boot_a
-```
-
-### Flash Magisk Patched Boot
-
-```text
-w boot_a magisk_patched.img
-reset
-```
-
-### Utility Commands
-
-```text
-p
-reboot-recovery
-reboot-fastboot
-poweroff
-timeout 30000
-blk_size 65535
-rawdata 1
-```
-
----
-
-## Changelog
-
-| Date       | Change                                                |
-| ---------- | ----------------------------------------------------- |
-| 2026-06-23 | Initial testing and failed `exec_addr` variants       |
-| 2026-06-24 | Moved to Kali Linux                                   |
-| 2026-06-24 | Confirmed `loadexec` as the working method            |
-| 2026-06-24 | Verified FDL2 access                                  |
-| 2026-06-24 | Verified bootloader unlock                            |
-| 2026-06-24 | Verified Magisk root                                  |
-| 2026-06-24 | Confirmed UFS storage                                 |
-| 2026-06-24 | Confirmed built-in WiFi does not support monitor mode |
-| 2026-06-24 | Clean guide prepared                                  |
-
----
-
-## Credits
-
-* **@TomKing062** — Unisoc research tools and `spreadtrum_flash`
-* **@topjohnwu** — Magisk
-* **Kali NetHunter Project** — NetHunter platform
-* **Hovatek Forum** — Unisoc bootloader and AVB research
-* **Kimi AI** — Troubleshooting, reconstruction, and corrections
-* **Original Tester / Maintainer:** Miguel Portugal / KiMiGuel
-
----
-
-## Disclaimer
-
-This guide is provided for research, repair, recovery, and owner-controlled device modification.
-
-No warranty is provided.
-
-You are responsible for any damage, data loss, boot failure, or device brick.
-
-Use stock firmware from your own device whenever possible.
-
-Do not flash random bootloader files across different models.
-
----
-
-## Final Verified Status
-
-```text
-Device: Cubot KingKong ES 3
-SoC: Unisoc T615 / UMS9230_6h10
-Build: CUBOT_KINGKONG_ES_3_F071_V16_20260309
-Storage: UFS
-FDL2: Confirmed
-Bootloader: Unlocked
-Magisk root: Confirmed
-NetHunter: Installable
-WiFi injection: External USB adapter required
-```
-
----
-
-*Last Updated: 2026-06-24*
+Do not treat this repository as a universal rooting recipe. It documents one device/build state and the evidence collected from it.

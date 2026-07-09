@@ -1,0 +1,50 @@
+# Raw firmware / partition images
+*.img
+*.bin
+*.pac
+*.zip
+*.part
+*.7z
+*.rar
+*.tar
+*.gz
+*.xz
+
+# Extracted firmware trees
+extracted/
+unpacked/
+stock_firmware/
+live_dumps/
+slot_a_dump/
+slot_a_ordered/
+
+# Android build outputs
+out/
+dist/
+*.ko
+*.dtb
+*.dtbo
+Image
+Image.gz
+Image.gz-dtb
+
+# Keys / credentials / device-specific private junk
+*.pem
+*.pk8
+*.key
+*.keystore
+*.jks
+*.token
+.env
+
+# Logs/temp
+*.log
+tmp/
+.cache/
+
+# Local extracted comparison artifacts
+comparison/boot_3way/
+comparison/init_boot_stock_vs_live/
+comparison/vendor_boot_stock_vs_live/
+comparison/dtbo_stock_vs_live/
+comparison/vbmeta_stock_vs_live/
