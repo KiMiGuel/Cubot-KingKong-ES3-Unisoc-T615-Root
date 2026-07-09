@@ -796,8 +796,8 @@ rawdata 1
 
 ## Credits
 
-* **TomKing062** — Unisoc research tools and `spreadtrum_flash`
-* **topjohnwu** — Magisk
+* **@TomKing062** — Unisoc research tools and `spreadtrum_flash`
+* **@topjohnwu** — Magisk
 * **Kali NetHunter Project** — NetHunter platform
 * **Hovatek Forum** — Unisoc bootloader and AVB research
 * **Kimi AI** — Troubleshooting, reconstruction, and corrections
