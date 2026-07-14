@@ -274,16 +274,68 @@ Magisk root
 
 ## NetHunter Notes
 
-NetHunter Lite can run on the rooted stock-kernel state, but kernel driver support is a separate question.
+NetHunter Lite runs on this rooted stock-kernel state, but NetHunter userspace does not automatically provide Android kernel drivers.
 
-Do not assume:
+The major update is that the stock Cubot kernel can load externally built modules when they are built against the correct live ABI.
 
-- built-in Wi-Fi supports monitor mode
-- external USB Wi-Fi modules are available
-- Bluetooth adapter modules are available
-- HID gadget or USB HID modules are available
+Confirmed build target:
 
-Those require the next phase: building or validating modules against the live stock kernel using `/proc/config.gz` and `/sys/kernel/kheaders.tar.xz`.
+```text
+5.15.178-android13-8-00012-g4ea0fcb5d130-ab13530115
+```
+
+Confirmed module-build requirements:
+
+- exact common-kernel source commit: `4ea0fcb5d1308f2f5a5dec0a3a5c8f1b261e00c7`
+- live `/proc/config.gz`
+- matching `Module.symvers`
+- Android Clang 14.0.7 / `clang-r450784e`
+- matching `module_layout` CRC: `0x0222dd63`
+
+### Netgear WNA1100 / AR9271 result
+
+The Netgear WNA1100 was validated on the rooted stock Cubot kernel using the `ath9k_htc` stack.
+
+Validated:
+
+- AR9271 USB adapter detected
+- firmware loaded
+- `wlan1` appeared
+- monitor mode worked
+- injection test worked in an authorized lab
+- Wifite could use the adapter
+
+Module stack used:
+
+```text
+mac80211.ko
+ath.ko
+ath9k_hw.ko
+ath9k_common.ko
+ath9k_htc.ko
+```
+
+Firmware used:
+
+```text
+htc_9271.fw
+ath9k_htc/htc_9271-1.4.0.fw
+```
+
+Safety warning: the current automatic/Magisk loader is experimental and should remain disabled until redesigned. The verified milestone is manual external-module functionality, not a production-safe install package.
+
+See `NETHUNTER_NETGEAR_AR9271_RESULTS.md` for details.
+
+### Remaining adapter work
+
+Do not assume every NetHunter-supported chipset now works on the Cubot.
+
+Next adapters to triage:
+
+- TP-Link Realtek adapter, likely `RTL8811AU` / `RTL8812AU` family
+- ALFA adapter, likely MediaTek `MT7610U` / `mt76x0u` family
+
+Each must be identified by USB ID before choosing a driver path.
 
 ## Custom Kernel Warning
 
@@ -328,5 +380,7 @@ This repo intentionally does not include:
 - `.bin` bootloader binaries
 - Magisk-patched images
 - extracted proprietary firmware trees
+- compiled kernel modules
+- firmware blobs
 
 Use your own stock firmware and verified dumps.

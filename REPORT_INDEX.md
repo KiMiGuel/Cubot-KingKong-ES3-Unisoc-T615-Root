@@ -5,8 +5,9 @@ Primary final reports:
 | Report | Purpose |
 |---|---|
 | `BOOT_CHAIN_FINDINGS.md` | Final boot-chain and root-state findings |
-| `NEXT_PHASE_HEADERS_MODULES_PLAN.md` | Plan for live Android 5.15 kheaders/module-build work |
 | `ROOTING_GUIDE.md` | Evidence-based guide to the root model used on this device/build |
+| `NEXT_PHASE_HEADERS_MODULES_PLAN.md` | Live Android 5.15 kheaders/module-build plan and current USB Wi-Fi triage direction |
+| `NETHUNTER_NETGEAR_AR9271_RESULTS.md` | NetHunter USB Wi-Fi milestone: Netgear WNA1100 / AR9271 on stock Cubot kernel |
 
 Component comparison reports:
 
