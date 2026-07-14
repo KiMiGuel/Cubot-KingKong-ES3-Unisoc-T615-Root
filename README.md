@@ -1,8 +1,8 @@
 # Cubot KingKong ES3 Unisoc T615 Root Research
 
-This repository documents boot-chain, AVB, Magisk/root-state, and kernel-module feasibility research for the Cubot KingKong ES3.
+This repository documents boot-chain, AVB, Magisk/root-state, NetHunter, and kernel-module feasibility research for the Cubot KingKong ES3.
 
-It is an analysis and documentation repo. Raw firmware images, PAC files, partition dumps, and extracted proprietary firmware trees are intentionally not stored here.
+It is an analysis and documentation repo. Raw firmware images, PAC files, partition dumps, generated kernel outputs, and extracted proprietary firmware trees are intentionally not stored here.
 
 ## Device
 
@@ -14,12 +14,12 @@ It is an analysis and documentation repo. Raw firmware images, PAC files, partit
 | Running kernel | `5.15.178-android13-8-00012-g4ea0fcb5d130-ab13530115` |
 | Active slot analyzed | slot A |
 | Storage | UFS |
-| UFS command-line evidence | `sprdoot.flash=ufs` |
+| UFS command-line evidence | `sprdboot.flash=ufs` |
 | Root state | Magisk-rooted with NetHunter Lite |
 
 ## Current Status
 
-The phone is rooted, but it is running the stock kernel.
+The phone is rooted and running the stock kernel.
 
 The active boot chain is mostly stock:
 
@@ -32,6 +32,40 @@ The active boot chain is mostly stock:
 | `vbmeta_a` | One-byte modified flags field; descriptors match stock |
 
 The root source is patched `init_boot_a`, not `boot_a`.
+
+### NetHunter / USB Wi-Fi milestone
+
+A stock-kernel external-module build environment has now been proven for this device.
+
+Confirmed target:
+
+```text
+5.15.178-android13-8-00012-g4ea0fcb5d130-ab13530115
+```
+
+Confirmed environment:
+
+- exact common-kernel source commit: `4ea0fcb5d1308f2f5a5dec0a3a5c8f1b261e00c7`
+- Android Clang 14.0.7 / `clang-r450784e`
+- live `/proc/config.gz` baseline
+- matching `Module.symvers`
+- `CONFIG_MODVERSIONS=y`
+- matching `module_layout` CRC: `0x0222dd63`
+
+Netgear WNA1100 / AR9271 support was achieved on the rooted stock Cubot kernel through externally built modules.
+
+Validated in an authorized lab environment:
+
+- `ath9k_htc` module stack loads
+- AR9271 firmware loads
+- `wlan1` appears
+- monitor mode works
+- packet injection test works
+- Wifite can use the adapter
+
+Important caveat: the current automatic/Magisk-loader packaging is not considered production-safe. The verified result is a manual stock-kernel external-module proof, not a full custom-kernel release.
+
+See `NETHUNTER_NETGEAR_AR9271_RESULTS.md`.
 
 ## Rooting Model Confirmed by the Evidence
 
@@ -60,8 +94,8 @@ This means:
 
 - Magisk root works from `init_boot_a`.
 - The active kernel is still stock.
-- A rooted phone is not proof that the custom kernel candidate works.
-- Future kernel work must match the live stock kernel ABI or solve the module/header environment first.
+- A rooted phone is not proof that a custom kernel candidate works.
+- Future kernel work must match the live stock kernel ABI or provide a coherent replacement kernel/module set.
 
 For a cleaner guide to the process and the evidence behind it, see `ROOTING_GUIDE.md`.
 
@@ -150,6 +184,7 @@ Start here:
 - `REPORT_INDEX.md`
 - `ROOTING_GUIDE.md`
 - `NEXT_PHASE_HEADERS_MODULES_PLAN.md`
+- `NETHUNTER_NETGEAR_AR9271_RESULTS.md`
 
 Component reports:
 
@@ -175,23 +210,29 @@ The following are intentionally excluded from git:
 - `.pac` firmware packages
 - extracted firmware trees
 - generated comparison extraction directories
+- compiled `.ko` module outputs
+- firmware blobs
 - archives and partial downloads
 
 The reports include hashes, metadata, and analysis results without storing proprietary raw firmware content.
 
 ## Next Phase
 
-The next main task is not another boot-chain identity check. That phase is complete.
+The boot-chain identity phase is complete.
+
+The live-header/module-build phase has also produced a confirmed result: Netgear WNA1100 / AR9271 can be made to work on the rooted stock Cubot kernel with externally built modules.
 
 Next phase:
 
-- build a live Android 5.15 kernel header/module environment
-- use `/proc/config.gz`
-- use `/sys/kernel/kheaders.tar.xz`
-- validate `CONFIG_MODVERSIONS`
-- test a minimal external module
-- evaluate whether USB Wi-Fi, Bluetooth, or HID modules are realistic
+- triage the TP-Link Realtek adapter by exact USB ID
+- triage the ALFA adapter by exact USB ID
+- avoid loading the experimental AR9271 Magisk module until its loader is redesigned
+- evaluate Realtek vendor-driver paths that may avoid custom `mac80211`
+- continue the coherent wireless-stack research before treating AR9271 as production-ready
 
-Plan: `NEXT_PHASE_HEADERS_MODULES_PLAN.md`.
+Plan and evidence:
+
+- `NEXT_PHASE_HEADERS_MODULES_PLAN.md`
+- `NETHUNTER_NETGEAR_AR9271_RESULTS.md`
 
 Do not treat this repository as a universal rooting recipe. It documents one device/build state and the evidence collected from it.
