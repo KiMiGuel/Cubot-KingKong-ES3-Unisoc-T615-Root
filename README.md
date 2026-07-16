@@ -4,6 +4,14 @@ This repository documents boot-chain, AVB, Magisk/root-state, NetHunter, and ker
 
 It is an analysis and documentation repo. Raw firmware images, PAC files, partition dumps, generated kernel outputs, and extracted proprietary firmware trees are intentionally not stored here.
 
+## Documento completo en español
+
+La investigación consolidada y traducida al español está disponible en:
+
+- [`INVESTIGACION_COMPLETA_ES.md`](INVESTIGACION_COMPLETA_ES.md)
+
+Incluye la cadena de arranque, el proceso de root, las comparaciones de particiones, la investigación del kernel personalizado, el entorno ABI de módulos y los resultados de NetHunter con AR9271.
+
 ## Device
 
 | Field | Value |
