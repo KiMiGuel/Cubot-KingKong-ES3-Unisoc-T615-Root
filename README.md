@@ -1,3 +1,5 @@
+**En Español haz click [aquí](https://github.com/KiMiGuel/Cubot-KingKong-ES3-Unisoc-T615-Root/blob/spanish/README.md)**
+
 # Cubot KingKong ES3 Unisoc T615 Root Research
 
 This repository documents boot-chain, AVB, Magisk/root-state, NetHunter, and kernel-module feasibility research for the Cubot KingKong ES3.
