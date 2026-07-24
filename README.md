@@ -1,8 +1,10 @@
 # Cubot KingKong ES3 Unisoc T615 Root Research
 
-This repository documents boot-chain, AVB, Magisk/root-state, NetHunter, and kernel-module feasibility research for the Cubot KingKong ES3.
+**For English, click [here](https://github.com/KiMiGuel/Cubot-KingKong-ES3-Unisoc-T615-Root/blob/main/README.md).**
 
-It is an analysis and documentation repo. Raw firmware images, PAC files, partition dumps, generated kernel outputs, and extracted proprietary firmware trees are intentionally not stored here.
+Este repositorio documenta la investigación sobre la cadena de arranque (boot chain), AVB, el estado de Magisk/root, NetHunter y la viabilidad de módulos de kernel para el Cubot KingKong ES3.
+
+Es un repositorio de análisis y documentación. Las imágenes de firmware crudas, los archivos PAC, los volcados de particiones, las salidas de kernel generadas y los árboles de firmware propietario extraídos no se almacenan aquí intencionadamente.
 
 ## Documento completo en español
 
@@ -12,72 +14,72 @@ La investigación consolidada y traducida al español está disponible en:
 
 Incluye la cadena de arranque, el proceso de root, las comparaciones de particiones, la investigación del kernel personalizado, el entorno ABI de módulos y los resultados de NetHunter con AR9271.
 
-## Device
+## Dispositivo
 
-| Field | Value |
+| Campo | Valor |
 |---|---|
-| Device | Cubot KingKong ES3 |
-| SoC | Unisoc T615 / ums9230-family |
-| Android build | `CUBOT_KINGKONG_ES_3_F071_V16_20260309` |
-| Running kernel | `5.15.178-android13-8-00012-g4ea0fcb5d130-ab13530115` |
-| Active slot analyzed | slot A |
-| Storage | UFS |
-| UFS command-line evidence | `sprdboot.flash=ufs` |
-| Root state | Magisk-rooted with NetHunter Lite |
+| Dispositivo | Cubot KingKong ES3 |
+| SoC | Unisoc T615 / familia ums9230 |
+| Build de Android | `CUBOT_KINGKONG_ES_3_F071_V16_20260309` |
+| Kernel en ejecución | `5.15.178-android13-8-00012-g4ea0fcb5d130-ab13530115` |
+| Slot activo analizado | slot A |
+| Almacenamiento | UFS |
+| Evidencia UFS en la línea de comandos | `sprdboot.flash=ufs` |
+| Estado de root | Rooteado con Magisk, con NetHunter Lite |
 
-## Current Status
+## Estado Actual
 
-The phone is rooted and running the stock kernel.
+El teléfono está rooteado y ejecuta el kernel stock.
 
-The active boot chain is mostly stock:
+La cadena de arranque activa es mayormente stock:
 
-| Partition | Finding |
+| Partición | Hallazgo |
 |---|---|
-| `boot_a` | Byte-for-byte stock PAC `boot-gki.img` |
-| `init_boot_a` | Magisk-patched and carrying root |
-| `vendor_boot_a` | Byte-for-byte stock PAC `vendor_boot.img` |
-| `dtbo_a` | Byte-for-byte stock PAC `dtbo.img` |
-| `vbmeta_a` | One-byte modified flags field; descriptors match stock |
+| `boot_a` | `boot-gki.img` del PAC stock, byte por byte |
+| `init_boot_a` | Parcheada con Magisk y portando el root |
+| `vendor_boot_a` | `vendor_boot.img` del PAC stock, byte por byte |
+| `dtbo_a` | `dtbo.img` del PAC stock, byte por byte |
+| `vbmeta_a` | Campo de flags modificado en un byte; los descriptores coinciden con stock |
 
-The root source is patched `init_boot_a`, not `boot_a`.
+La fuente del root es el `init_boot_a` parcheado, no `boot_a`.
 
-### NetHunter / USB Wi-Fi milestone
+### Hito de NetHunter / Wi-Fi USB
 
-A stock-kernel external-module build environment has now been proven for this device.
+Ya se ha demostrado un entorno de compilación de módulos externos sobre el kernel stock para este dispositivo.
 
-Confirmed target:
+Objetivo confirmado:
 
 ```text
 5.15.178-android13-8-00012-g4ea0fcb5d130-ab13530115
 ```
 
-Confirmed environment:
+Entorno confirmado:
 
-- exact common-kernel source commit: `4ea0fcb5d1308f2f5a5dec0a3a5c8f1b261e00c7`
+- commit exacto del common-kernel: `4ea0fcb5d1308f2f5a5dec0a3a5c8f1b261e00c7`
 - Android Clang 14.0.7 / `clang-r450784e`
-- live `/proc/config.gz` baseline
-- matching `Module.symvers`
+- base de `/proc/config.gz` en vivo
+- `Module.symvers` coincidente
 - `CONFIG_MODVERSIONS=y`
-- matching `module_layout` CRC: `0x0222dd63`
+- CRC de `module_layout` coincidente: `0x0222dd63`
 
-Netgear WNA1100 / AR9271 support was achieved on the rooted stock Cubot kernel through externally built modules.
+Se logró el soporte del Netgear WNA1100 / AR9271 sobre el kernel Cubot stock rooteado mediante módulos compilados externamente.
 
-Validated in an authorized lab environment:
+Validado en un entorno de laboratorio autorizado:
 
-- `ath9k_htc` module stack loads
-- AR9271 firmware loads
-- `wlan1` appears
-- monitor mode works
-- packet injection test works
-- Wifite can use the adapter
+- la pila de módulos `ath9k_htc` carga
+- el firmware AR9271 carga
+- aparece `wlan1`
+- el monitor mode funciona
+- la prueba de inyección de paquetes funciona
+- Wifite puede usar el adaptador
 
-Important caveat: the current automatic/Magisk-loader packaging is not considered production-safe. The verified result is a manual stock-kernel external-module proof, not a full custom-kernel release.
+Advertencia importante: el empaquetado automático/cargador-Magisk actual no se considera seguro para producción. El resultado verificado es una prueba manual de módulo externo sobre kernel stock, no una versión completa de kernel personalizado.
 
-See `NETHUNTER_NETGEAR_AR9271_RESULTS.md`.
+Consulta `NETHUNTER_NETGEAR_AR9271_RESULTS.md`.
 
-## Rooting Model Confirmed by the Evidence
+## Modelo de Rooteo Confirmado por la Evidencia
 
-The analyzed rooted state looks like this:
+El estado rooteado analizado se ve así:
 
 ```text
 unlocked/orange LK bootloader
@@ -98,28 +100,28 @@ Magisk-patched init_boot_a
 Magisk root
 ```
 
-This means:
+Esto significa:
 
-- Magisk root works from `init_boot_a`.
-- The active kernel is still stock.
-- A rooted phone is not proof that a custom kernel candidate works.
-- Future kernel work must match the live stock kernel ABI or provide a coherent replacement kernel/module set.
+- El root de Magisk funciona desde `init_boot_a`.
+- El kernel activo sigue siendo stock.
+- Un teléfono rooteado no es prueba de que un candidato de kernel personalizado funcione.
+- El trabajo futuro sobre el kernel debe coincidir con el ABI del kernel stock en vivo o proporcionar un conjunto coherente de kernel/módulos de reemplazo.
 
-For a cleaner guide to the process and the evidence behind it, see `ROOTING_GUIDE.md`.
+Para una guía más clara del proceso y de la evidencia que lo respalda, consulta `ROOTING_GUIDE.md`.
 
-## Major Findings
+## Hallazgos Principales
 
 ### boot_a
 
-Live `boot_a` is byte-for-byte identical to stock PAC `boot-gki.img`.
+El `boot_a` en vivo es byte por byte idéntico al `boot-gki.img` del PAC stock.
 
-Stock/live unpacked kernel hash:
+Hash del kernel stock/en vivo desempaquetado:
 
 ```text
 8b9584d8518c79ab80c114143e1190b7e8e9058964adc8cffde98c53f083a532
 ```
 
-Custom candidate kernel hash:
+Hash del kernel candidato personalizado:
 
 ```text
 773d9adcb8c20f954a584fcc84b147452028074c148b82fb4983bf2b3dee132a
@@ -127,7 +129,7 @@ Custom candidate kernel hash:
 
 ### init_boot_a
 
-Live `init_boot_a` is Magisk-patched. Evidence includes:
+El `init_boot_a` en vivo está parcheado con Magisk. La evidencia incluye:
 
 ```text
 .backup/.magisk
@@ -140,7 +142,7 @@ overlay.d/sbin/stub.xz
 
 ### vendor_boot_a
 
-Live `vendor_boot_a` is stock. It contains the stock DTB, bootconfig, vendor ramdisk, first-stage fstab, and 157 stock vendor modules.
+El `vendor_boot_a` en vivo es stock. Contiene el DTB stock, bootconfig, el ramdisk de vendor, el fstab de primera etapa y 157 módulos de vendor stock.
 
 Bootconfig:
 
@@ -148,7 +150,7 @@ Bootconfig:
 androidboot.hardware=ums9230_6h10
 ```
 
-Boot-critical stock-matching modules include:
+Entre los módulos críticos de arranque que coinciden con stock se incluyen:
 
 ```text
 ufs_sprd.ko
@@ -161,9 +163,9 @@ regmap-hook.ko
 
 ### dtbo_a
 
-Live `dtbo_a` is stock. It contains 13 DTBO entries, all matching stock after extraction and decompilation.
+El `dtbo_a` en vivo es stock. Contiene 13 entradas DTBO, todas coincidentes con stock tras la extracción y descompilación.
 
-DTBO confirms UFS and regulator-related overlay evidence, including:
+El DTBO confirma evidencia de overlays relacionados con UFS y reguladores, incluyendo:
 
 ```text
 20200000.ufs
@@ -176,17 +178,17 @@ pmic_regulator
 
 ### vbmeta_a
 
-Live `vbmeta_a` differs from stock by exactly one byte in the signed AVB header flags field.
+El `vbmeta_a` en vivo difiere del stock en exactamente un byte del campo de flags de la cabecera AVB firmada.
 
-| Field | Stock | Live |
+| Campo | Stock | En vivo |
 |---|---:|---:|
 | Flags | `0` | `33554432` |
 
-All descriptors, keys, rollback metadata, release string, and build properties match stock. Live `vbmeta_a` fails `avbtool` signature verification, which fits the unlocked/orange LK bootloader state.
+Todos los descriptores, claves, metadatos de rollback, cadena de versión y propiedades de build coinciden con stock. El `vbmeta_a` en vivo falla la verificación de firma de `avbtool`, lo cual encaja con el estado de bootloader LK desbloqueado/naranja (unlocked/orange).
 
-## Report Index
+## Índice de Reportes
 
-Start here:
+Empieza aquí:
 
 - `BOOT_CHAIN_FINDINGS.md`
 - `REPORT_INDEX.md`
@@ -194,7 +196,7 @@ Start here:
 - `NEXT_PHASE_HEADERS_MODULES_PLAN.md`
 - `NETHUNTER_NETGEAR_AR9271_RESULTS.md`
 
-Component reports:
+Reportes por componente:
 
 - `REPORT_3WAY_BOOT_COMPARISON.md`
 - `REPORT_INIT_BOOT_STOCK_VS_LIVE.md`
@@ -202,45 +204,45 @@ Component reports:
 - `REPORT_DTBO_STOCK_VS_LIVE.md`
 - `REPORT_VBMETA_STOCK_VS_LIVE.md`
 
-Evidence summaries:
+Resúmenes de evidencia:
 
 - `IMAGE_METADATA.txt`
 - `EXTRACTED_TREE_SUMMARY.txt`
 - `SEARCH_HITS_BOOT_CRITICAL.txt`
 - `ACTIVE_SLOT_A_SHA256SUMS.txt`
 
-## Raw Firmware Policy
+## Política de Firmware Crudo
 
-The following are intentionally excluded from git:
+Lo siguiente se excluye intencionadamente de git:
 
-- raw `.img` partition dumps
-- `.bin` bootloader or firmware binaries
-- `.pac` firmware packages
-- extracted firmware trees
-- generated comparison extraction directories
-- compiled `.ko` module outputs
-- firmware blobs
-- archives and partial downloads
+- volcados crudos de particiones `.img`
+- binarios `.bin` de bootloader o firmware
+- paquetes de firmware `.pac`
+- árboles de firmware extraídos
+- directorios de extracción de comparación generados
+- salidas de módulos `.ko` compilados
+- blobs de firmware
+- archivos comprimidos y descargas parciales
 
-The reports include hashes, metadata, and analysis results without storing proprietary raw firmware content.
+Los reportes incluyen hashes, metadatos y resultados de análisis sin almacenar contenido crudo de firmware propietario.
 
-## Next Phase
+## Siguiente Fase
 
-The boot-chain identity phase is complete.
+La fase de identidad de la cadena de arranque está completa.
 
-The live-header/module-build phase has also produced a confirmed result: Netgear WNA1100 / AR9271 can be made to work on the rooted stock Cubot kernel with externally built modules.
+La fase de cabeceras-en-vivo/compilación-de-módulos también ha producido un resultado confirmado: el Netgear WNA1100 / AR9271 puede hacerse funcionar sobre el kernel Cubot stock rooteado con módulos compilados externamente.
 
-Next phase:
+Siguiente fase:
 
-- triage the TP-Link Realtek adapter by exact USB ID
-- triage the ALFA adapter by exact USB ID
-- avoid loading the experimental AR9271 Magisk module until its loader is redesigned
-- evaluate Realtek vendor-driver paths that may avoid custom `mac80211`
-- continue the coherent wireless-stack research before treating AR9271 as production-ready
+- clasificar el adaptador TP-Link Realtek por su ID USB exacto
+- clasificar el adaptador ALFA por su ID USB exacto
+- evitar cargar el módulo Magisk experimental del AR9271 hasta rediseñar su cargador
+- evaluar rutas de drivers de vendor Realtek que puedan evitar un `mac80211` personalizado
+- continuar la investigación coherente de la pila inalámbrica antes de tratar el AR9271 como listo para producción
 
-Plan and evidence:
+Plan y evidencia:
 
 - `NEXT_PHASE_HEADERS_MODULES_PLAN.md`
 - `NETHUNTER_NETGEAR_AR9271_RESULTS.md`
 
-Do not treat this repository as a universal rooting recipe. It documents one device/build state and the evidence collected from it.
+No trates este repositorio como una receta universal de rooteo. Documenta el estado de un dispositivo/build concreto y la evidencia recopilada de él.
