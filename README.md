@@ -18,10 +18,10 @@ Follows the same 5-step flow as the classic `unlock_autopatch_9230` script — p
 
 ## 🧰 Step 0 — Set up the tools
 
-Download the `cubot_es3_unlock_package.zip` package from [Releases](https://github.com/KiMiGuel/Cubot-KingKong-ES3-Unisoc-T615-Root/releases), unzip, and build:
+Download `cubot_es3_unlock_package.zip` from [Releases](https://github.com/KiMiGuel/Cubot-KingKong-ES3-Unisoc-T615-Root/releases), unzip, and build:
 
 ```
-cd spl_unlock_linux
+cd cubot_es3_unlock_package
 make
 gcc gen_spl-unlock.c -o gen_spl-unlock
 gcc chsize.c -o chsize
@@ -151,10 +151,9 @@ Open Magisk → root active. 🎉 **Done — unlocked and rooted.**
 - [`ROOTING_GUIDE.md`](ROOTING_GUIDE.md) — long-form guide with the evidence behind each step
 - [`BOOT_CHAIN_FINDINGS.md`](BOOT_CHAIN_FINDINGS.md) — boot-chain / AVB analysis
 - [`INVESTIGACION_COMPLETA_ES.md`](INVESTIGACION_COMPLETA_ES.md) — investigación completa en español
-- [`NETHUNTER_NETGEAR_AR9271_RESULTS.md`](NETHUNTER_NETGEAR_AR9271_RESULTS.md) — NetHunter + external Wi-Fi monitor mode on the stock kernel
 - [`REPORT_INDEX.md`](REPORT_INDEX.md) — stock-vs-live partition comparison series
-- [`NEXT_PHASE_HEADERS_MODULES_PLAN.md`](NEXT_PHASE_HEADERS_MODULES_PLAN.md) — what comes next
+- [`UNLOCK_ROOT_RESEARCH.md`](UNLOCK_ROOT_RESEARCH.md) — the story behind the unlock: how root was achieved, in plain language
 
 This repo stores **docs and hashes only** — no firmware images, PACs, partition dumps, or `.ko` files. It documents one device/build state; don't treat it as a universal rooting recipe.
 
-🙏 Built on [TomKing062's CVE-2022-38694 toolkit](https://github.com/TomKing062/CVE-2022-38694_unlock_bootloader) (`spd_dump`/`spreadtrum_flash`, `gen_spl-unlock`, `chsize`) and [Magisk](https://github.com/topjohnwu/Magisk) by topjohnwu. Thank You @TomKing062 @topjohnwu
+🙏 Built on [TomKing062's CVE-2022-38694 toolkit](https://github.com/TomKing062/CVE-2022-38694_unlock_bootloader) (`spd_dump`/`spreadtrum_flash`, `gen_spl-unlock`, `chsize`) and [Magisk](https://github.com/topjohnwu/Magisk) by topjohnwu.

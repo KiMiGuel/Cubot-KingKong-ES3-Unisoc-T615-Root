@@ -18,10 +18,10 @@ Sigue el mismo flujo de 5 pasos del clásico script `unlock_autopatch_9230` — 
 
 ## 🧰 Paso 0 — Prepara las herramientas
 
-Descarga el paquete `spl_unlock_linux` desde [Releases](https://github.com/KiMiGuel/Cubot-KingKong-ES3-Unisoc-T615-Root/releases), descomprímelo y compila:
+Descarga `cubot_es3_unlock_package.zip` desde [Releases](https://github.com/KiMiGuel/Cubot-KingKong-ES3-Unisoc-T615-Root/releases), descomprímelo y compila:
 
 ```
-cd spl_unlock_linux
+cd cubot_es3_unlock_package
 make
 gcc gen_spl-unlock.c -o gen_spl-unlock
 gcc chsize.c -o chsize
@@ -152,6 +152,7 @@ Abre Magisk → root activo. 🎉 **Listo — desbloqueado y rooteado.**
 - [`BOOT_CHAIN_FINDINGS.md`](BOOT_CHAIN_FINDINGS.md) — análisis de la cadena de arranque / AVB
 - [`INVESTIGACION_COMPLETA_ES.md`](INVESTIGACION_COMPLETA_ES.md) — investigación completa en español
 - [`REPORT_INDEX.md`](REPORT_INDEX.md) — serie de comparaciones de particiones stock vs. en vivo
+- [`UNLOCK_ROOT_RESEARCH.md`](UNLOCK_ROOT_RESEARCH.md) — la historia detrás del desbloqueo: cómo se logró el root, explicada en lenguaje sencillo (en inglés)
 
 Este repositorio guarda **solo documentos y hashes** — nada de imágenes de firmware, PACs, volcados de particiones ni archivos `.ko`. Documenta el estado de un dispositivo/build específico; no lo tomes como una receta universal de rooteo.
 
