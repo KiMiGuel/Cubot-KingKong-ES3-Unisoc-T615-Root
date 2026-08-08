@@ -54,10 +54,11 @@ spd_dump --wait 300 exec_addr 0x65015f08 fdl fdl1-dl.bin 0x65000800 fdl fdl2-dl.
 
 Wait for the reset. `find port failed` → close and re-run — do **not** continue past that error.
 
-**7️⃣ Generate the unlock payload, stash the backups:**
+**7️⃣ Generate the unlock payload, resize + stash the backups:**
 
 ```
 gen_spl-unlock splloader.bin
+chsize uboot.bin
 mv splloader.bin u-boot-spl-16k-sign.bin
 mv uboot.bin uboot_bak.bin
 ```
