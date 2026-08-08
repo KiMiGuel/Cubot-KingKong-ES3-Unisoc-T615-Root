@@ -1,4 +1,4 @@
-**En Español haz click [aquí](https://github.com/KiMiGuel/Cubot-KingKong-ES3-Unisoc-T615-Root/blob/spanish/README.md)**
+**En Español haz click [aquí](./README_ES.md)**
 
 # 🔓 Cubot KingKong ES 3 — Unlock & Root Guide
 
@@ -18,7 +18,7 @@ Follows the same 5-step flow as the classic `unlock_autopatch_9230` script — p
 
 ## 🧰 Step 0 — Set up the tools
 
-Download the `cubot_es3_unlock_package.zip` package from [Releases](https://github.com/KiMiGuel/Cubot-KingKong-ES3-Unisoc-T615-Root/releases), unzip, and build:
+Download the `spl_unlock_linux` package from [Releases](https://github.com/KiMiGuel/Cubot-KingKong-ES3-Unisoc-T615-Root/releases), unzip, and build:
 
 ```
 cd spl_unlock_linux
