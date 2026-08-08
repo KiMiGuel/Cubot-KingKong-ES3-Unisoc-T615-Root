@@ -98,6 +98,8 @@ Use Linux for the BROM/FDL steps. macOS USB/libusb behavior can be unreliable fo
 3. Plug in USB while holding Volume Down.
 4. Confirm Spreadtrum/Unisoc BROM appears on the host.
 
+If BROM does not enumerate, retry holding **Volume Up** instead (while plugging USB or pressing Power). The working key changed with device state during this project — early sessions entered BROM with Volume Down + Power, later ones with Volume Up + Power.
+
 Example check:
 
 ```sh

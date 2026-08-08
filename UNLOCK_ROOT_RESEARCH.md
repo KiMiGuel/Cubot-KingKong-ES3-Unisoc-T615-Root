@@ -20,7 +20,7 @@ Two facts kill entire categories of advice you'll find elsewhere:
 - **There is no fastboot unlock.** `fastboot flashing unlock` returns `Unrecognized command`. The OEM simply never wired it up.
 - **There is no recovery partition.** The GPT has 74 entries and not one of them is named `recovery`. Any guide that starts with "boot into recovery" is dead on arrival here.
 
-The door is **BROM** — the BootROM, a tiny loader burned into the chip itself. Power off, hold Volume Down, plug in USB, and the phone enumerates as `1782:4d00` before a single byte of Android or even the bootloader has run. BROM can't be bricked, corrupted, or locked out, because it isn't stored anywhere writable. Everything in this project goes through that door.
+The door is **BROM** — the BootROM, a tiny loader burned into the chip itself. Power off, hold Volume Down — Volume Up in some device states, both combos were used at different points in this project — plug in USB (or press Power), and the phone enumerates as `1782:4d00` before a single byte of Android or even the bootloader has run. BROM can't be bricked, corrupted, or locked out, because it isn't stored anywhere writable. Everything in this project goes through that door.
 
 The lock itself was defeated with **CVE-2022-38694** — a published signature-check bypass in Unisoc's FDL1 download stage, with a public toolkit by TomKing062. No new vulnerability was needed; the work was making the existing one function on this specific device, from Linux, reliably.
 
@@ -60,7 +60,7 @@ One day before the final unlock, the device went through its worst event of the 
 
 "Warning: no OS" turned out not to be one bug. Four suspects were eliminated in order, each with evidence: vbmeta verification state — ruled out; a stale recovery boot-command in `misc` — ruled out; GPT corruption — ruled out, all eight saved partition maps from six weeks of work were byte-identical; a userdata wipe — changed nothing. What cleared it was unglamorous: stock `uboot` back in place, the same unlock chain re-run, both slots reflashed with hash-verified images. The phone came back, and was rooted the next day.
 
-This section exists for one reason: **at no point in the brick was BROM unreachable.** Volume Down + USB answered every time. If you soft-brick this phone mid-process, you are in exactly the position this device was in — and this device came back.
+This section exists for one reason: **at no point in the brick was BROM unreachable.** The volume-key + USB combo answered every time. If you soft-brick this phone mid-process, you are in exactly the position this device was in — and this device came back.
 
 ## What "rooted" actually means here
 
