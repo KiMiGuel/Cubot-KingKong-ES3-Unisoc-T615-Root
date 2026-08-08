@@ -40,7 +40,7 @@ Un archivo NO viene en el paquete: `init_boot.img` — extráelo de **tu propio*
 
 ## 💾 Paso 1 — Respalda y parchea tus loaders
 
-Entra a **BROM**: apaga el teléfono → mantén presionado **Volumen Abajo** → conecta el USB → sigue presionando. Confirma:
+Entra a **BROM**: apaga el teléfono → mantén presionado **Volumen Abajo** → conecta el USB (o presiona Encender) → sigue presionando. Si no aparece `1782:4d00`, reintenta con **Volumen Arriba** — la tecla que funciona puede cambiar según el estado del dispositivo. Confirma:
 
 ```
 lsusb | grep -i '1782:4d00'

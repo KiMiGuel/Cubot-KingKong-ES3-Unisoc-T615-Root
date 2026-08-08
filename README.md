@@ -40,7 +40,7 @@ One file is NOT in the package: `init_boot.img` — extract it from **your own**
 
 ## 💾 Step 1 — Back up & patch your loaders
 
-Enter **BROM**: power off → hold **Volume Down** → plug USB → keep holding. Confirm:
+Enter **BROM**: power off → hold **Volume Down** → plug USB (or press Power) → keep holding. If `1782:4d00` doesn't appear, retry with **Volume Up** — the working key has been seen to change with device state. Confirm:
 
 ```
 lsusb | grep -i '1782:4d00'
