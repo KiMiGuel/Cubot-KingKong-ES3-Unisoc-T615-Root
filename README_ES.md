@@ -13,12 +13,13 @@ Sigue el mismo flujo de 5 pasos del clásico script `unlock_autopatch_9230` — 
 > - 🐧 Usa **Linux** (Kali). Ni macOS, ni Windows.
 > - 🎯 Verificado únicamente en el build indicado arriba — vuelve a verificar antes de usarlo en cualquier otro build.
 > - 🧯 ¿Se brickeó a la mitad? El modo BROM siempre responde — siempre puedes recuperarlo.
+> - ☢️ `prodnv` / `nvitem` / `l_fixnv` contienen datos de calibración de fábrica — nunca los leas, escribas ni borres, en ningún paso.
 
 ---
 
 ## 🧰 Paso 0 — Prepara las herramientas
 
-Descarga `cubot_es3_unlock_package.zip` desde [Releases](https://github.com/KiMiGuel/Cubot-KingKong-ES3-Unisoc-T615-Root/releases), descomprímelo y compila:
+Descarga el paquete de desbloqueo desde [Releases](https://github.com/KiMiGuel/Cubot-KingKong-ES3-Unisoc-T615-Root/releases) — `cubot_es3_unlock_package_amd64.zip` para una PC normal (x86-64), `cubot_es3_unlock_package_arm64.zip` para máquinas ARM64 — descomprímelo y compila:
 
 ```
 cd cubot_es3_unlock_package
@@ -124,8 +125,9 @@ En la app de Magisk: **Install → Select and Patch a File → `init_boot.img`**
 
 ```
 adb pull /sdcard/Download/magisk_patched-*.img .
+mv magisk_patched-*.img init_boot_a.img
 adb reboot fastboot
-fastboot flash init_boot magisk_patched-XXXXX.img
+fastboot flash init_boot_a init_boot_a.img
 fastboot reboot
 ```
 
