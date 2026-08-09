@@ -126,7 +126,8 @@ In the Magisk app: **Install → Select and Patch a File → `init_boot.img`**, 
 ```
 adb pull /sdcard/Download/magisk_patched-*.img .
 mv magisk_patched-*.img init_boot_a.img
-adb reboot fastboot
+adb reboot fastboot                 # this boots into fastbootd, NOT the bootloader
+fastboot devices                    # must show "<serial> fastbootd" — confirm before flashing
 fastboot flash init_boot_a init_boot_a.img
 fastboot reboot
 ```
