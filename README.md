@@ -126,8 +126,9 @@ In the Magisk app: **Install → Select and Patch a File → `init_boot.img`**, 
 ```
 adb pull /sdcard/Download/magisk_patched-*.img .
 mv magisk_patched-*.img init_boot_a.img
-adb reboot fastboot                 # this boots into fastbootd, NOT the bootloader
-                                    # the phone screen will show "FASTBOOTD" in big letters
+adb reboot fastboot                 # goes STRAIGHT to fastbootd — skips the bootloader entirely.
+                                    # On-device confirmation: screen looks like Android Recovery,
+                                    # yellow lettering with "FASTBOOTD" in red.
 fastboot devices                    # must show "<serial> fastbootd" — confirm before flashing
 fastboot flash init_boot_a init_boot_a.img
 fastboot reboot
