@@ -215,4 +215,4 @@ Open Magisk → root active. 🎉 **Done — unlocked and rooted.**
 
 This repo stores **docs and hashes only** — no firmware images, PACs, partition dumps, or `.ko` files. It documents one device/build state; don't treat it as a universal rooting recipe.
 
-🙏 Built on [TomKing062's CVE-2022-38694 toolkit](https://github.com/TomKing062/CVE-2022-38694_unlock_bootloader) (`spd_dump`/`spreadtrum_flash`, `gen_spl-unlock`, `chsize`) and [Magisk](https://github.com/topjohnwu/Magisk) by topjohnwu.
+🙏 Built on [TomKing062's CVE-2022-38694 toolkit](https://github.com/TomKing062/CVE-2022-38694_unlock_bootloader) (`spd_dump`/`spreadtrum_flash`, `gen_spl-unlock`, `chsize`), [PAC-Extractor](https://github.com/bismoy-bot/PAC-Extractor) by Bismoy Ghosh, and [Magisk](https://github.com/topjohnwu/Magisk) by topjohnwu.
