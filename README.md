@@ -17,6 +17,21 @@ Follows the same 5-step flow as the classic `unlock_autopatch_9230` script — p
 
 ---
 
+## 🗺️ The cast of characters — read this once and every command below makes sense
+
+Every command in this guide does one of two things: talk to **BROM**, or (once the helpers are loaded) talk to **FDL2**. Here's who's who:
+
+- **BROM (Boot ROM)** — code burned into the Unisoc chip at the factory. It can never be erased or bricked, which is why it's your panic button. With the phone powered off, holding a volume key while plugging in USB wakes it up; the phone then shows up in `lsusb` as `1782:4d00`. **BROM does nothing on its own** — it just waits for a PC to send it code.
+- **The exploit (`exec_addr 0x65015f08`)** — BROM normally refuses to run anything that isn't factory-signed. CVE-2022-38694 is a bug in this chip's BROM that lets us smuggle our own code past that check. You'll see `exec_addr 0x65015f08` at the front of almost every command — that's the crowbar prying BROM open. It works by loading `custom_exec_no_verify_65015f08.bin`, which `spd_dump` picks up automatically from the current folder (one more reason to stay inside the package folder).
+- **FDL1 / FDL2** — the two helper programs we send through the pried-open BROM. **FDL1** wakes up the phone's RAM; **FDL2** is the real worker that can read, write, and erase any flash partition. The repeating pattern `fdl fdl1-dl.bin 0x65000800 fdl fdl2-dl.bin 0x9efffe00 exec` simply means: *"load FDL1, load FDL2, start them."*
+- **spd_dump verbs** — once FDL2 is running: `r <partition>` = copy a partition from the phone to a file · `w <partition> <file>` = write a file to a partition · `e <partition>` = erase · `read_part` = read raw bytes into a file · `reset` = reboot the phone.
+- **splloader** — the first stage of the phone's *normal* boot chain, stored in its own flash partition. **It contains the bootloader lock check** — that's why it's the target. You never "extract" the splloader from any file: in Step 1 you copy it off the phone (`r splloader`) and patch that copy.
+- **uboot** — the regular bootloader (the thing that gives you fastboot). In Step 2 it's temporarily replaced with a cooperative copy (`fdl2-cboot.bin`) so the unlock can run; Step 5 puts your original back.
+- **miscdata** — a small hidden partition that holds the unlock flag. "Unlocking" = flipping that flag. Step 4 reads it back as proof.
+- **The boot chain, in order:** `BROM → splloader → uboot → Android`. The unlock (Steps 1–5) neuters the lock check in **splloader**. The root (Step 6) is a separate trick that patches **`init_boot`**, one of Android's own boot images.
+
+---
+
 ## 🧰 Step 0 — Set up the tools
 
 Download the unlock package from [Releases](https://github.com/KiMiGuel/Cubot-KingKong-ES3-Unisoc-T615-Root/releases) — `cubot_es3_unlock_package_amd64.zip` for a normal PC (x86-64), `cubot_es3_unlock_package_arm64.zip` for ARM64 machines — unzip, and build:
@@ -35,7 +50,34 @@ Verify you built the right thing — both checks must pass:
 grep reopen_port common.c  # must find the reconnect fix
 ```
 
-One file is NOT in the package: `init_boot.img` — extract it from **your own** stock PAC (build above). Stay inside the package folder the whole time — dumps land in the current directory.
+### 📦 Where every file comes from
+
+| File | Where it comes from |
+|---|---|
+| `spd_dump`, `gen_spl-unlock`, `chsize` | You just built them from the package source (commands above) |
+| `fdl1-dl.bin`, `fdl2-dl.bin`, `fdl2-cboot.bin`, `misc-wipe.bin`, `custom_exec_no_verify_65015f08.bin` | Ship **ready-made inside the package** — nothing to build, don't rename or move them |
+| `splloader.bin`, `uboot.bin` | You dump them off your own phone in Step 1 |
+| `spl-unlock.bin` | `gen_spl-unlock` creates it from your dumped `splloader.bin` (Step 1) — it's your splloader with the lock check neutered |
+| `u-boot-spl-16k-sign.bin`, `uboot_bak.bin` | Your renamed backups from Step 1 — used to restore the phone in Step 5 |
+| `init_boot.img` | **NOT in the package** — you extract it from your own stock PAC (below) |
+| `magisk_patched-*.img` | The Magisk app creates it on the phone (Step 6) |
+
+### 📥 Getting `init_boot.img` out of the stock PAC
+
+A `.pac` file is Unisoc's all-in-one firmware container — one big file holding every partition image. You need exactly one image out of it.
+
+1. Download the official firmware zip for the build at the top of this guide from Cubot's own support page: [cubot.net/support](https://cubot.net/Support/id/135/cid/27.html) → KingKong ES 3 → `CUBOT_KINGKONG_ES_3_F071_V16_20260309`. Unzip it — inside is the `.pac` file (~3 GB).
+2. Extract the PAC on Linux:
+
+```
+git clone https://github.com/bismoy-bot/PAC-Extractor
+cd PAC-Extractor
+python3 extractor.py /path/to/your/firmware.pac extracted
+```
+
+3. Inside `extracted/`, find `init_boot.img` (if it's named `init_boot_a.img`, rename it) and copy it into the package folder.
+
+Stay inside the package folder the whole time — dumps land in the current directory.
 
 ---
 
@@ -47,11 +89,13 @@ Enter **BROM**: power off → hold **Volume Down** → plug USB (or press Power)
 lsusb | grep -i '1782:4d00'
 ```
 
-Dump `splloader` + `uboot`:
+Dump `splloader` + `uboot` (copy them off the phone into files in the current folder):
 
 ```
 spd_dump --wait 300 exec_addr 0x65015f08 fdl fdl1-dl.bin 0x65000800 fdl fdl2-dl.bin 0x9efffe00 exec r splloader r uboot e splloader e splloader_bak reset
 ```
+
+What this does: opens BROM with the exploit → loads FDL1+FDL2 → reads `splloader` and `uboot` into `splloader.bin` / `uboot.bin` → erases the splloader slots (they get rewritten in Step 5) → reboots.
 
 Wait for the reset. `find port failed` → close and re-run — do **not** continue past that error.
 
@@ -68,6 +112,8 @@ mv uboot.bin uboot_bak.bin
 
 ## ⚡ Step 2 — Write the working FDL2
 
+What this step does: temporarily replaces the `uboot` partition with `fdl2-cboot.bin`, a cooperative copy of FDL2 — the stock uboot would refuse to take part in what comes next. Your original uboot is safely backed up and returns in Step 5.
+
 Re-enter BROM (Step 1), then:
 
 ```
@@ -79,6 +125,8 @@ Wait ~10 seconds after the reset.
 ---
 
 ## 🔓 Step 3 — Run the unlock
+
+What this step does: sends the neutered `spl-unlock.bin` up through BROM and runs it. It's the splloader code **with the lock check removed** — and the mere act of it running flips the unlock flag in `miscdata`. That flag flip IS the unlock; there is no "restore" dance afterwards.
 
 Re-enter BROM, then:
 
@@ -95,6 +143,8 @@ What you'll see, and why it's all good:
 
 ## ✅ Step 4 — Verify the unlock
 
+You don't trust what the tool printed — you read the flag itself out of `miscdata`:
+
 ```
 spd_dump exec_addr 0x65015f08 fdl fdl1-dl.bin 0x65000800 fdl fdl2-dl.bin 0x9efffe00 exec verbose 2 read_part miscdata 8192 64 m.bin reset
 ```
@@ -105,6 +155,8 @@ Check `m.bin`: 64 zero bytes = still locked (repeat Step 3) · 32-byte string + 
 
 ## 🧹 Step 5 — Restore & wipe
 
+What this step does: puts the phone back together — writes your original `splloader` and `uboot` backups back (the neutered splloader and `fdl2-cboot` were temporary guests only), and writes `misc-wipe.bin` to force the factory reset that an unlock requires.
+
 ```
 spd_dump exec_addr 0x65015f08 fdl fdl1-dl.bin 0x65000800 fdl fdl2-dl.bin 0x9efffe00 exec r boot w splloader u-boot-spl-16k-sign.bin w uboot uboot_bak.bin w misc misc-wipe.bin reset
 ```
@@ -114,6 +166,8 @@ Let the phone factory-reset and boot. 🟠 **Orange/unlocked warning screen = su
 ---
 
 ## 🪄 Step 6 — Root with Magisk
+
+The bootloader is unlocked — now root is just Magisk patching `init_boot.img` (that's why you extracted it in Step 0) and flashing the patched copy. Done in **fastbootd** (userspace fastboot), not the plain bootloader.
 
 Boot Android → Settings → About Phone → tap Build Number ×7 → Developer Options → **USB debugging**. Then:
 
