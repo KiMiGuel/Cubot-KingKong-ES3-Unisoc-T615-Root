@@ -215,4 +215,4 @@ Abre Magisk → root activo. 🎉 **Listo — desbloqueado y rooteado.**
 
 Este repositorio guarda **solo documentos y hashes** — nada de imágenes de firmware, PACs, volcados de particiones ni archivos `.ko`. Documenta el estado de un dispositivo/build específico; no lo tomes como una receta universal de rooteo.
 
-🙏 Construido sobre el [toolkit de CVE-2022-38694 de TomKing062](https://github.com/TomKing062/CVE-2022-38694_unlock_bootloader) (`spd_dump`/`spreadtrum_flash`, `gen_spl-unlock`, `chsize`) y [Magisk](https://github.com/topjohnwu/Magisk) de topjohnwu.
+🙏 Construido sobre el [toolkit de CVE-2022-38694 de TomKing062](https://github.com/TomKing062/CVE-2022-38694_unlock_bootloader) (`spd_dump`/`spreadtrum_flash`, `gen_spl-unlock`, `chsize`), [PAC-Extractor](https://github.com/bismoy-bot/PAC-Extractor) de Bismoy Ghosh, y [Magisk](https://github.com/topjohnwu/Magisk) de topjohnwu.
