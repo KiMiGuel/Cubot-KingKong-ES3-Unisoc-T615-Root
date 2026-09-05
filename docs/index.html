@@ -1,0 +1,565 @@
+<title>KingKong ES3 Root Manual</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@600;700;800&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+<style>
+  :root{
+    --bg:#e9edf0;
+    --surface:#ffffff;
+    --surface-2:#eef1f4;
+    --ink:#101e2c;
+    --ink-dim:#55697a;
+    --accent:#b85c00;
+    --accent-ink:#ffffff;
+    --danger:#b3261e;
+    --ok:#2f7a3d;
+    --line:rgba(16,30,44,0.14);
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --bg:#0b1420;
+      --surface:#101d2e;
+      --surface-2:#16273b;
+      --ink:#dfe9f0;
+      --ink-dim:#7f9aad;
+      --accent:#ff9d3d;
+      --accent-ink:#101420;
+      --danger:#ff6b5e;
+      --ok:#63c17a;
+      --line:rgba(223,233,240,0.14);
+    }
+  }
+  :root[data-theme="dark"]{
+    --bg:#0b1420;
+    --surface:#101d2e;
+    --surface-2:#16273b;
+    --ink:#dfe9f0;
+    --ink-dim:#7f9aad;
+    --accent:#ff9d3d;
+    --accent-ink:#101420;
+    --danger:#ff6b5e;
+    --ok:#63c17a;
+    --line:rgba(223,233,240,0.14);
+  }
+
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background:var(--bg);
+    color:var(--ink);
+    font-family:"IBM Plex Sans", ui-sans-serif, system-ui, sans-serif;
+    line-height:1.6;
+  }
+  .wrap{max-width:820px; margin:0 auto; padding:0 24px 96px;}
+  a{color:inherit;}
+
+  .display{
+    font-family:"Big Shoulders Display", "Arial Narrow", sans-serif;
+    font-weight:800;
+    text-transform:uppercase;
+    letter-spacing:0.01em;
+    text-wrap:balance;
+  }
+  .mono{font-family:"IBM Plex Mono", ui-monospace, SFMono-Regular, monospace;}
+  code{
+    font-family:"IBM Plex Mono", ui-monospace, monospace;
+    background:var(--surface-2);
+    border:1px solid var(--line);
+    border-radius:3px;
+    padding:1px 5px;
+    font-size:0.92em;
+  }
+  .eyebrow{
+    font-family:"IBM Plex Mono", monospace;
+    font-size:11.5px;
+    letter-spacing:0.14em;
+    text-transform:uppercase;
+    color:var(--ink-dim);
+  }
+
+  header.top{
+    display:flex; justify-content:space-between; align-items:baseline;
+    padding:22px 24px 0; max-width:820px; margin:0 auto;
+    gap:10px; flex-wrap:wrap;
+  }
+  .brand-tag{
+    font-family:"IBM Plex Mono", monospace;
+    font-size:11px; letter-spacing:0.08em; text-transform:uppercase;
+    color:var(--ink-dim); text-decoration:none;
+    border:1px solid var(--line); border-radius:3px; padding:5px 10px;
+    white-space:nowrap;
+  }
+
+  .nameplate{
+    margin:28px 0 0;
+    background:var(--surface);
+    border:1px solid var(--line);
+    border-radius:6px;
+    padding:36px 32px 28px;
+    position:relative;
+  }
+  .nameplate::before{
+    content:"";
+    position:absolute; inset:10px;
+    border:1px dashed var(--line);
+    border-radius:3px;
+    pointer-events:none;
+  }
+  .plate-row{display:flex; justify-content:space-between; align-items:flex-start; gap:20px; flex-wrap:wrap;}
+  h1.model{
+    font-size:clamp(34px,6vw,58px);
+    line-height:0.98;
+    margin:6px 0 4px;
+  }
+  .chipset{
+    font-family:"IBM Plex Mono", monospace;
+    font-size:14px;
+    color:var(--ink-dim);
+    margin:0 0 18px;
+  }
+  .stamps{display:flex; gap:10px; flex-wrap:wrap;}
+  .stamp{
+    font-family:"IBM Plex Mono", monospace;
+    font-size:11.5px;
+    letter-spacing:0.04em;
+    border:1px solid var(--accent);
+    color:var(--accent);
+    padding:5px 9px;
+    border-radius:3px;
+    white-space:nowrap;
+  }
+
+  .hazard{
+    margin-top:22px;
+    border:1px solid var(--danger);
+    border-radius:4px;
+    overflow:hidden;
+    display:flex;
+    align-items:stretch;
+  }
+  .hazard-bar{
+    flex:0 0 14px;
+    background:repeating-linear-gradient(45deg, var(--danger) 0 8px, transparent 8px 16px);
+    opacity:0.85;
+  }
+  .hazard p{margin:0; padding:12px 16px; font-size:14px; font-weight:600;}
+  .hazard strong{color:var(--danger);}
+
+  .stats{
+    display:grid;
+    grid-template-columns:repeat(auto-fit, minmax(150px,1fr));
+    gap:1px;
+    background:var(--line);
+    border:1px solid var(--line);
+    border-radius:6px;
+    overflow:hidden;
+    margin-top:20px;
+  }
+  .stat{background:var(--surface); padding:16px 18px;}
+  .stat .eyebrow{margin-bottom:6px;}
+  .stat .val{font-family:"IBM Plex Mono", monospace; font-weight:600; font-size:15px; font-variant-numeric:tabular-nums;}
+
+  section{margin-top:56px;}
+  h2{
+    font-size:13px;
+    text-transform:uppercase;
+    letter-spacing:0.12em;
+    color:var(--ink-dim);
+    font-family:"IBM Plex Mono", monospace;
+    font-weight:600;
+    margin:0 0 18px;
+    padding-bottom:10px;
+    border-bottom:1px solid var(--line);
+  }
+  p.lede{max-width:64ch; color:var(--ink); font-size:15.5px;}
+
+  figure.diagram{margin:0; padding:20px 8px 6px;}
+  figure.diagram svg{width:100%; height:auto; display:block;}
+  figcaption{margin-top:14px; font-size:13px; color:var(--ink-dim); max-width:64ch;}
+
+  .tablewrap{overflow-x:auto; border:1px solid var(--line); border-radius:6px;}
+  table{width:100%; border-collapse:collapse; font-size:13.5px; min-width:520px;}
+  th{
+    text-align:left; font-family:"IBM Plex Mono", monospace;
+    font-size:11px; letter-spacing:0.08em; text-transform:uppercase;
+    color:var(--ink-dim); font-weight:600; background:var(--surface-2); padding:10px 14px;
+  }
+  td{padding:12px 14px; border-top:1px solid var(--line); vertical-align:top;}
+  tr:nth-child(even) td{background:var(--surface-2);}
+  td.term{font-family:"IBM Plex Mono", monospace; font-weight:600; white-space:nowrap;}
+  .no-touch{color:var(--danger); font-family:"IBM Plex Mono", monospace; font-size:11px; font-weight:600; letter-spacing:0.04em;}
+
+  /* ---- step manual ---- */
+  .lang-link{
+    display:inline-block; margin-bottom:28px; font-family:"IBM Plex Mono", monospace;
+    font-size:12.5px; color:var(--accent); text-decoration:none; border-bottom:1px solid var(--accent);
+  }
+  .step{
+    display:grid;
+    grid-template-columns:64px 1fr;
+    gap:20px;
+    padding:28px 0;
+    border-top:1px solid var(--line);
+  }
+  .step:first-of-type{border-top:none;}
+  .stepnum{
+    font-family:"Big Shoulders Display", sans-serif;
+    font-weight:800;
+    font-size:40px;
+    line-height:1;
+    color:var(--ink-dim);
+    font-variant-numeric:tabular-nums;
+  }
+  .step-body h3{
+    margin:2px 0 12px;
+    font-size:19px;
+    font-family:"IBM Plex Sans", sans-serif;
+    font-weight:700;
+  }
+  .step-body p{margin:0 0 14px; font-size:14.5px; max-width:66ch;}
+  .step-body p:last-child{margin-bottom:0;}
+  .code{
+    background:var(--surface-2);
+    border:1px solid var(--line);
+    border-radius:6px;
+    padding:14px 16px;
+    overflow-x:auto;
+    font-family:"IBM Plex Mono", monospace;
+    font-size:12.5px;
+    line-height:1.65;
+    white-space:pre;
+    margin:0 0 14px;
+  }
+  .note{
+    border-left:3px solid var(--accent);
+    padding:2px 0 2px 14px;
+    font-size:13.5px;
+    color:var(--ink-dim);
+    margin:0 0 14px;
+  }
+  .signals{list-style:none; margin:0 0 14px; padding:0; display:flex; flex-direction:column; gap:6px; font-size:13.5px;}
+  .signals li{display:flex; gap:10px;}
+  .signals .mark{flex:0 0 20px;}
+  .results{display:flex; gap:10px; flex-wrap:wrap; margin:0 0 14px;}
+  .result{
+    font-family:"IBM Plex Mono", monospace; font-size:12.5px;
+    border-radius:4px; padding:8px 12px; border:1px solid var(--line);
+  }
+  .result.bad{border-color:var(--danger); color:var(--danger);}
+  .result.good{border-color:var(--ok); color:var(--ok);}
+  .step-body ol{margin:0 0 14px; padding-left:20px; font-size:14.5px;}
+  .step-body li{margin-bottom:6px;}
+  strong.warn{color:var(--danger);}
+
+  .ctas{display:grid; grid-template-columns:repeat(auto-fit, minmax(220px,1fr)); gap:12px;}
+  .cta{display:block; background:var(--surface); border:1px solid var(--line); border-radius:6px; padding:16px 18px; text-decoration:none; transition:border-color .15s ease;}
+  .cta:hover{border-color:var(--accent);}
+  .cta .eyebrow{color:var(--accent); margin-bottom:6px;}
+  .cta .title{font-weight:600; font-size:15px;}
+  .cta .sub{font-size:12.5px; color:var(--ink-dim); margin-top:3px;}
+
+  footer{
+    margin-top:64px; padding-top:24px; border-top:1px solid var(--line);
+    font-size:12.5px; color:var(--ink-dim);
+    display:flex; justify-content:space-between; gap:16px; flex-wrap:wrap;
+  }
+  footer a{text-decoration:underline; text-decoration-color:var(--line);}
+
+  @media (max-width:520px){
+    .plate-row{flex-direction:column;}
+    .step{grid-template-columns:40px 1fr;}
+    .stepnum{font-size:28px;}
+  }
+</style>
+
+<header class="top">
+  <span class="brand-tag">INDEPENTEST · ANDROID R&amp;D</span>
+  <span class="brand-tag">DOCS ONLY — NO FIRMWARE, NO PACs</span>
+</header>
+
+<div class="wrap">
+
+  <div class="nameplate">
+    <div class="plate-row">
+      <div>
+        <div class="eyebrow">Field manual — unlock &amp; root</div>
+        <h1 class="display model">Cubot<br>KingKong ES 3</h1>
+        <p class="chipset">Unisoc T615 (UMS9230_6h10) · UFS · A/B slots</p>
+      </div>
+      <div class="stamps">
+        <span class="stamp">CVE-2022-38694</span>
+        <span class="stamp mono">exec_addr 0x65015f08</span>
+        <span class="stamp">BUILD F071_V16_20260309</span>
+      </div>
+    </div>
+
+    <div class="hazard">
+      <div class="hazard-bar" aria-hidden="true"></div>
+      <p><strong>Wipes the device.</strong> Back up first. Verified only on the build stamped above — re-verify before using on any other build.</p>
+    </div>
+
+    <div class="stats">
+      <div class="stat"><div class="eyebrow">Difficulty</div><div class="val">Medium / Hard</div></div>
+      <div class="stat"><div class="eyebrow">Host OS</div><div class="val">Linux only</div></div>
+      <div class="stat"><div class="eyebrow">USB</div><div class="val">2.0, direct — no hubs</div></div>
+      <div class="stat"><div class="eyebrow">Recovery</div><div class="val">BROM always answers</div></div>
+    </div>
+  </div>
+
+  <section>
+    <h2>The boot chain — and where each hack lands</h2>
+    <p class="lede">One exploit, two separate interventions. The unlock (Steps 1–5) neuters the lock check inside <code>splloader</code>. Root (Step 6) is a later, unrelated patch to Android's own <code>init_boot</code> image.</p>
+
+    <figure class="diagram">
+      <svg viewBox="0 0 920 260" role="img" aria-label="Boot chain from BROM to splloader to uboot to Android, with the CVE-2022-38694 exploit patching splloader's lock check, and a separate Magisk patch to init_boot at the Android stage for root">
+        <defs>
+          <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+            <path d="M0,0 L10,5 L0,10 z" fill="currentColor"/>
+          </marker>
+        </defs>
+        <g font-family="IBM Plex Mono, monospace" font-size="13">
+          <line x1="70" y1="60" x2="230" y2="60" stroke="currentColor" stroke-width="1.4" marker-end="url(#arrow)"/>
+          <line x1="300" y1="60" x2="460" y2="60" stroke="currentColor" stroke-width="1.4" marker-end="url(#arrow)"/>
+          <line x1="530" y1="60" x2="690" y2="60" stroke="currentColor" stroke-width="1.4" marker-end="url(#arrow)"/>
+          <line x1="760" y1="60" x2="850" y2="60" stroke="currentColor" stroke-width="1.4" marker-end="url(#arrow)"/>
+
+          <rect x="10" y="34" width="60" height="52" rx="3" fill="none" stroke="currentColor" stroke-width="1.3"/>
+          <text x="40" y="56" text-anchor="middle">BROM</text>
+          <text x="40" y="72" text-anchor="middle" font-size="10" opacity="0.6">1782:4d00</text>
+
+          <rect x="230" y="34" width="70" height="52" rx="3" fill="none" stroke="currentColor" stroke-width="1.3"/>
+          <text x="265" y="56" text-anchor="middle">splloader</text>
+          <text x="265" y="72" text-anchor="middle" font-size="10" opacity="0.6">lock check</text>
+
+          <rect x="460" y="34" width="70" height="52" rx="3" fill="none" stroke="currentColor" stroke-width="1.3"/>
+          <text x="495" y="60" text-anchor="middle">uboot</text>
+
+          <rect x="690" y="34" width="70" height="52" rx="3" fill="none" stroke="currentColor" stroke-width="1.3"/>
+          <text x="725" y="60" text-anchor="middle">Android</text>
+
+          <rect x="850" y="34" width="60" height="52" rx="3" fill="none" stroke="currentColor" stroke-width="1.3" opacity="0.55"/>
+          <text x="880" y="56" text-anchor="middle" opacity="0.75">boot</text>
+          <text x="880" y="72" text-anchor="middle" opacity="0.75">done</text>
+        </g>
+        <g>
+          <line x1="150" y1="86" x2="150" y2="130" stroke="var(--accent)" stroke-width="1.4" marker-end="url(#arrow)"/>
+          <text x="150" y="150" text-anchor="middle" font-family="IBM Plex Mono, monospace" font-size="11.5" fill="var(--accent)" font-weight="600">CVE-2022-38694</text>
+          <text x="150" y="166" text-anchor="middle" font-family="IBM Plex Mono, monospace" font-size="11" fill="var(--accent)">exec_addr 0x65015f08</text>
+          <text x="150" y="182" text-anchor="middle" font-family="IBM Plex Mono, monospace" font-size="11" fill="var(--accent)">→ FDL1/FDL2 patch lock check</text>
+          <text x="150" y="204" text-anchor="middle" font-family="IBM Plex Mono, monospace" font-size="10.5" opacity="0.6">Steps 1–5 · unlock</text>
+        </g>
+        <g>
+          <line x1="725" y1="86" x2="725" y2="130" stroke="var(--accent)" stroke-width="1.4" marker-end="url(#arrow)"/>
+          <text x="725" y="150" text-anchor="middle" font-family="IBM Plex Mono, monospace" font-size="11.5" fill="var(--accent)" font-weight="600">Magisk</text>
+          <text x="725" y="166" text-anchor="middle" font-family="IBM Plex Mono, monospace" font-size="11" fill="var(--accent)">patches init_boot.img</text>
+          <text x="725" y="204" text-anchor="middle" font-family="IBM Plex Mono, monospace" font-size="10.5" opacity="0.6">Step 6 · root</text>
+        </g>
+      </svg>
+      <figcaption>The exploit only ever touches the BROM→splloader hop; root is a completely separate, later patch to Android's own init_boot image — unlocking does not require rooting, and rooting requires an already-unlocked bootloader.</figcaption>
+    </figure>
+  </section>
+
+  <section>
+    <h2>Cast of characters</h2>
+    <div class="tablewrap">
+      <table>
+        <thead><tr><th>Term</th><th>What it does</th></tr></thead>
+        <tbody>
+          <tr><td class="term">BROM</td><td>Factory boot ROM, burned into the chip — never erasable. Your panic button if anything goes wrong.</td></tr>
+          <tr><td class="term">FDL1 / FDL2</td><td>Helper programs smuggled past BROM. FDL1 wakes RAM; FDL2 can read, write, or erase any flash partition.</td></tr>
+          <tr><td class="term">spd_dump verbs</td><td><code>r</code> read · <code>w</code> write · <code>e</code> erase · <code>read_part</code> raw read · <code>reset</code> reboot</td></tr>
+          <tr><td class="term">splloader</td><td>First stage of the normal boot chain. Holds the bootloader-lock check that Steps 1–5 patch.</td></tr>
+          <tr><td class="term">uboot</td><td>The regular bootloader (gives you fastboot). Swapped for a cooperative copy mid-unlock, restored after.</td></tr>
+          <tr><td class="term">miscdata</td><td>Small hidden partition holding the unlock flag.</td></tr>
+          <tr><td class="term">prodnv / nvitem / l_fixnv</td><td>Factory radio calibration (IMEI, Wi-Fi/BT MAC). <span class="no-touch">NEVER READ/WRITE/ERASE</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section>
+    <h2>The guide</h2>
+    <a class="lang-link" href="https://github.com/KiMiGuel/Root-Guide-Cubot-KingKong-ES-3---Unisoc-T615-ums9230-/blob/main/README_ES.md">¿Prefieres español? → README_ES.md</a>
+
+    <div class="step">
+      <div class="stepnum">00</div>
+      <div class="step-body">
+        <h3>Set up the tools</h3>
+        <p>Download the unlock package from <a href="https://github.com/KiMiGuel/Root-Guide-Cubot-KingKong-ES-3---Unisoc-T615-ums9230-/releases">Releases</a> — <code>cubot_es3_unlock_package_amd64.zip</code> for a normal PC (x86-64), <code>cubot_es3_unlock_package_arm64.zip</code> for ARM64 machines — unzip, and build:</p>
+        <div class="code">cd cubot_es3_unlock_package
+make
+gcc gen_spl-unlock.c -o gen_spl-unlock
+gcc chsize.c -o chsize</div>
+        <p>Verify you built the right thing — both checks must pass:</p>
+        <div class="code">./spd_dump --help          # must NOT list a "baudrate" command
+grep reopen_port common.c  # must find the reconnect fix</div>
+        <p>You'll also need Android's <code>adb</code> and <code>fastboot</code> for Step 6 — install them now so you're not stuck mid-guide:</p>
+        <div class="code">sudo apt install android-tools-adb android-tools-fastboot
+adb --version &amp;&amp; fastboot --version</div>
+
+        <p><strong>Where every file comes from</strong></p>
+        <div class="tablewrap">
+          <table>
+            <tbody>
+              <tr><td class="term">spd_dump, gen_spl-unlock, chsize</td><td>Built from the package source just now</td></tr>
+              <tr><td class="term">fdl1-dl.bin, fdl2-dl.bin, fdl2-cboot.bin, misc-wipe.bin, custom_exec_no_verify_65015f08.bin</td><td>Ship ready-made inside the package — don't rename or move them</td></tr>
+              <tr><td class="term">splloader.bin, uboot.bin</td><td>You dump them off your own phone in Step 1</td></tr>
+              <tr><td class="term">spl-unlock.bin</td><td><code>gen_spl-unlock</code> creates it from your dumped splloader.bin — the lock check, neutered</td></tr>
+              <tr><td class="term">u-boot-spl-16k-sign.bin, uboot_bak.bin</td><td>Your renamed Step 1 backups — restore the phone in Step 5</td></tr>
+              <tr><td class="term">init_boot.img</td><td><strong>Not in the package</strong> — extracted from your own stock PAC, below</td></tr>
+              <tr><td class="term">magisk_patched-*.img</td><td>The Magisk app creates it on the phone (Step 6)</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <p><strong>Getting init_boot.img out of the stock PAC</strong> — a .pac file is Unisoc's all-in-one firmware container; you need exactly one image out of it.</p>
+        <ol>
+          <li>Download the official firmware zip for the build stamped at the top of this page from <a href="https://cubot.net/Support/id/135/cid/27.html">Cubot's support page</a> → KingKong ES 3 → <code>CUBOT_KINGKONG_ES_3_F071_V16_20260309</code>. Unzip it — inside is the .pac file (~3 GB).</li>
+          <li>Extract the PAC on Linux:
+            <div class="code">git clone https://github.com/bismoy-bot/PAC-Extractor
+cd PAC-Extractor
+python3 extractor.py /path/to/your/firmware.pac extracted</div>
+          </li>
+          <li>Inside <code>extracted/</code>, find <code>init_boot.img</code> (rename from <code>init_boot_a.img</code> if needed) and copy it into the package folder.</li>
+        </ol>
+        <p class="note">Stay inside the package folder the whole time — dumps land in the current directory.</p>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="stepnum">01</div>
+      <div class="step-body">
+        <h3>Back up &amp; patch your loaders</h3>
+        <p>Enter <strong>BROM</strong>: power off → hold <strong>Volume Down</strong> → plug USB (or press Power) → keep holding. If <code>1782:4d00</code> doesn't appear, retry with <strong>Volume Up</strong>. Confirm:</p>
+        <div class="code">lsusb | grep -i '1782:4d00'</div>
+        <p>Dump <code>splloader</code> + <code>uboot</code> off the phone:</p>
+        <div class="code">spd_dump --wait 300 exec_addr 0x65015f08 fdl fdl1-dl.bin 0x65000800 fdl fdl2-dl.bin 0x9efffe00 exec r splloader r uboot e splloader e splloader_bak reset</div>
+        <p class="note">Opens BROM with the exploit → loads FDL1+FDL2 → reads splloader/uboot into files → erases the splloader slots (rewritten in Step 5) → reboots.</p>
+        <p>Wait for the reset. <code>find port failed</code> → close and re-run — <strong class="warn">do not continue past that error.</strong></p>
+        <p>Generate the unlock payload, resize + stash the backups:</p>
+        <div class="code">gen_spl-unlock splloader.bin
+chsize uboot.bin
+mv splloader.bin u-boot-spl-16k-sign.bin
+mv uboot.bin uboot_bak.bin</div>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="stepnum">02</div>
+      <div class="step-body">
+        <h3>Write the working FDL2</h3>
+        <p class="note">Temporarily replaces the uboot partition with fdl2-cboot.bin, a cooperative copy of FDL2 — stock uboot would refuse to take part in what comes next. Your original returns in Step 5.</p>
+        <p>Re-enter BROM (Step 1), then:</p>
+        <div class="code">spd_dump --wait 300 exec_addr 0x65015f08 fdl fdl1-dl.bin 0x65000800 fdl fdl2-dl.bin 0x9efffe00 exec w uboot fdl2-cboot.bin reset</div>
+        <p>Wait ~10 seconds after the reset.</p>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="stepnum">03</div>
+      <div class="step-body">
+        <h3>Run the unlock</h3>
+        <p class="note">Sends the neutered spl-unlock.bin up through BROM and runs it — the mere act of it running flips the unlock flag in miscdata. That flag flip IS the unlock; there's no "restore" dance after.</p>
+        <p>Re-enter BROM, then:</p>
+        <div class="code">spd_dump exec_addr 0x65015f08 fdl spl-unlock.bin 0x65000800</div>
+        <p>What you'll see, and why it's all good:</p>
+        <ul class="signals">
+          <li><span class="mark">🔄</span> <span><code>CHECK_BAUD FAIL</code> — expected. The patched build reconnects by itself.</span></li>
+          <li><span class="mark">✅</span> <span><code>CHECK_BAUD FDL1</code> → <code>BSL_REP_VER: "SPRD3"</code> → <code>CMD_CONNECT FDL1</code> — <strong>this IS the success signal.</strong></span></li>
+          <li><span class="mark">⏱️</span> <span><code>timeout reached</code> after that — <strong>this is what you want</strong>, not an error. Don't re-run; move to Step 4. (Only re-run if you never saw <code>CMD_CONNECT FDL1</code>.)</span></li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="stepnum">04</div>
+      <div class="step-body">
+        <h3>Verify the unlock</h3>
+        <p>Don't trust what the tool printed — read the flag itself out of <code>miscdata</code>:</p>
+        <div class="code">spd_dump exec_addr 0x65015f08 fdl fdl1-dl.bin 0x65000800 fdl fdl2-dl.bin 0x9efffe00 exec verbose 2 read_part miscdata 8192 64 m.bin reset</div>
+        <p>Check <code>m.bin</code> with <code>xxd m.bin</code>:</p>
+        <div class="results">
+          <span class="result bad">64 zero bytes → still locked, repeat Step 3</span>
+          <span class="result good">32-byte string + two 16-byte hashes → unlocked</span>
+        </div>
+        <p>A trailing timeout here is normal.</p>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="stepnum">05</div>
+      <div class="step-body">
+        <h3>Restore &amp; wipe</h3>
+        <p class="note">Puts the phone back together — writes your original splloader/uboot backups back, and writes misc-wipe.bin to force the factory reset an unlock requires.</p>
+        <div class="code">spd_dump exec_addr 0x65015f08 fdl fdl1-dl.bin 0x65000800 fdl fdl2-dl.bin 0x9efffe00 exec r boot w splloader u-boot-spl-16k-sign.bin w uboot uboot_bak.bin w misc misc-wipe.bin reset</div>
+        <p>Let the phone factory-reset and boot. <strong>Orange/unlocked warning screen = success.</strong></p>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="stepnum">06</div>
+      <div class="step-body">
+        <h3>Root with Magisk</h3>
+        <p>The bootloader is unlocked — root is just Magisk patching <code>init_boot.img</code> and flashing the patched copy, done in <strong>fastbootd</strong> (userspace fastboot), not the plain bootloader.</p>
+        <p>Install the <a href="https://github.com/topjohnwu/Magisk/releases">Magisk app</a> on the phone if you haven't already. Boot Android → Settings → About Phone → tap Build Number ×7 → Developer Options → <strong>USB debugging</strong>. Then:</p>
+        <div class="code">adb push init_boot.img /sdcard/Download/</div>
+        <p>In the Magisk app: <strong>Install → Select and Patch a File → init_boot.img</strong>, pull the patched image back, and flash it in fastbootd:</p>
+        <div class="code">adb pull /sdcard/Download/magisk_patched-*.img .
+mv magisk_patched-*.img init_boot_a.img
+adb reboot fastboot                 # goes STRAIGHT to fastbootd — skips the bootloader
+fastboot devices                    # must show "&lt;serial&gt; fastbootd" — confirm before flashing
+fastboot flash init_boot_a init_boot_a.img
+fastboot reboot</div>
+        <p>Open Magisk → root active. <strong>Done — unlocked and rooted.</strong></p>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <h2>Troubleshooting</h2>
+    <div class="tablewrap">
+      <table>
+        <thead><tr><th>Symptom</th><th>Fix</th></tr></thead>
+        <tbody>
+          <tr><td class="term">LIBUSB_ERROR_BUSY</td><td><code>sudo systemctl stop ModemManager</code>, replug</td></tr>
+          <tr><td class="term">LIBUSB_ERROR_NO_DEVICE</td><td>Start spd_dump first, then plug the phone</td></tr>
+          <tr><td class="term">find port failed</td><td>Close and re-run the same command</td></tr>
+          <tr><td class="term">Connection drops / won't detect</td><td>Make sure you're on USB 2.0</td></tr>
+          <tr><td class="term">Two CHECK_BAUD FAIL → device removed</td><td>Your build is missing the reconnect fix — rebuild (common.c must contain reopen_port)</td></tr>
+          <tr><td class="term">Boot loop / soft brick</td><td>BROM (Step 1) always answers — reflash stock firmware, redo the guide</td></tr>
+          <tr><td class="term">In spd_dump</td><td><span class="no-touch">NEVER run repartition, erase_all, or ufs repart/rawerase/setattr</span> — they truncate the GPT</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section>
+    <h2>More</h2>
+    <div class="ctas">
+      <a class="cta" href="https://github.com/KiMiGuel/Root-Guide-Cubot-KingKong-ES-3---Unisoc-T615-ums9230-/releases">
+        <div class="eyebrow">Step 0</div>
+        <div class="title">Unlock package</div>
+        <div class="sub">cubot_es3_unlock_package (amd64 / arm64)</div>
+      </a>
+      <a class="cta" href="https://github.com/KiMiGuel/Root-Guide-Cubot-KingKong-ES-3---Unisoc-T615-ums9230-/blob/main/ROOTING_GUIDE.md">
+        <div class="eyebrow">Deep dive · EN</div>
+        <div class="title">ROOTING_GUIDE.md</div>
+        <div class="sub">The evidence behind each step</div>
+      </a>
+      <a class="cta" href="https://github.com/KiMiGuel/Root-Guide-Cubot-KingKong-ES-3---Unisoc-T615-ums9230-/blob/main/INVESTIGACION_COMPLETA_ES.md">
+        <div class="eyebrow">Investigación completa · ES</div>
+        <div class="title">INVESTIGACION_COMPLETA_ES.md</div>
+        <div class="sub">Toda la investigación, en español</div>
+      </a>
+      <a class="cta" href="https://github.com/KiMiGuel/Root-Guide-Cubot-KingKong-ES-3---Unisoc-T615-ums9230-">
+        <div class="eyebrow">Source</div>
+        <div class="title">GitHub repository</div>
+        <div class="sub">Issues, history, raw files</div>
+      </a>
+    </div>
+  </section>
+
+  <footer>
+    <span>Built on <a href="https://github.com/TomKing062/CVE-2022-38694_unlock_bootloader">TomKing062's CVE-2022-38694 toolkit</a> · <a href="https://github.com/bismoy-bot/PAC-Extractor">PAC-Extractor</a> by Bismoy Ghosh · <a href="https://github.com/topjohnwu/Magisk">Magisk</a> by topjohnwu</span>
+    <span>An Indepentest Android R&amp;D project</span>
+  </footer>
+
+</div>
