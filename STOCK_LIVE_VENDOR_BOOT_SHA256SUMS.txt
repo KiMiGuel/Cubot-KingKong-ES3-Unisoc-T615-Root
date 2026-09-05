@@ -1,2 +1,0 @@
-0df796cca5a5a80b1d93caeca17acbcd075262ab3e2ff73bbe6e99fa075efadf  /home/kali/pacextractor/pac_out/vendor_boot.img
-0df796cca5a5a80b1d93caeca17acbcd075262ab3e2ff73bbe6e99fa075efadf  ../slot_a_ordered/03_vendor_boot_a_live.img

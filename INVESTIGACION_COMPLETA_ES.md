@@ -10,7 +10,7 @@
 
 ## 1. Resumen ejecutivo
 
-El Cubot KingKong ES3 analizado está rooteado con Magisk y puede ejecutar NetHunter Lite, pero continúa usando el kernel original de fábrica.
+El Cubot KingKong ES3 analizado está rooteado con Magisk, pero continúa usando el kernel original de fábrica.
 
 La evidencia final demuestra lo siguiente:
 
@@ -43,7 +43,7 @@ boot_a stock con kernel stock
 init_boot_a parcheado por Magisk
         |
         v
-Root de Magisk + NetHunter Lite
+Root de Magisk
 ```
 
 La conclusión más importante es sencilla:
@@ -67,7 +67,6 @@ Rootear el dispositivo y lograr que un kernel personalizado arranque son dos pro
 | Almacenamiento | UFS |
 | Evidencia UFS | `sprdboot.flash=ufs` |
 | Root | Magisk |
-| NetHunter | NetHunter Lite / Kali chroot |
 
 ### Mapa confirmado de particiones del slot A
 
@@ -93,10 +92,6 @@ La investigación se dividió en varias fases:
 4. Obtención de dumps del slot A activo.
 5. Comparaciones controladas de imágenes stock, live y candidatas.
 6. Identificación exacta del componente que porta Magisk.
-7. Investigación del fallo del kernel personalizado.
-8. Reconstrucción de un entorno externo de compilación de módulos.
-9. Prueba de Wi-Fi USB para NetHunter con AR9271.
-10. Definición de los siguientes pasos para Realtek, MediaTek y una pila inalámbrica coherente.
 
 Las comparaciones se realizaron con hashes SHA-256, `cmp`, desempaquetado de imágenes Android, análisis AVB, extracción de ramdisks, análisis DTB/DTBO y comparación de módulos.
 
@@ -189,36 +184,28 @@ Linux fue el entorno utilizado para BROM/FDL. El comportamiento USB/libusb de ma
 
 ### Comando de acceso FDL2 que funcionó
 
-El camino funcional utilizó `loadexec`:
+El camino verificado utiliza `exec_addr`, no `loadexec`:
 
 ```sh
-sudo ./spd_dump --verbose 2 --wait 300 \
-  loadexec custom_exec_no_verify_65015f08.bin \
-  fdl fdl1-dl.bin 0x65000800 \
-  fdl fdl2-dl.bin 0x9efffe00 \
-  exec
+spd_dump --wait 300 exec_addr 0x65015f08 fdl fdl1-dl.bin 0x65000800 fdl fdl2-dl.bin 0x9efffe00 exec
 ```
 
-Resultado esperado:
-
-```text
-FDL2 >
-```
-
-Desde `FDL2>` existe acceso de bajo nivel a lectura y escritura de particiones. Una escritura equivocada puede impedir el arranque y requerir recuperación mediante firmware stock.
+`exec_addr 0x65015f08` es el punto de entrada del exploit CVE-2022-38694 — es lo que logra que BROM acepte y ejecute los payloads FDL1/FDL2 sin firmar que vienen después. Una vez cargados FDL1 y FDL2, la herramienta tiene acceso de bajo nivel a lectura y escritura de particiones. Una escritura equivocada puede impedir el arranque y requerir recuperación mediante firmware stock.
 
 ---
 
 ## 6. Desbloqueo del bootloader
 
-El flujo funcional de desbloqueo escribió:
+El flujo verificado no escribe `splloader` directamente. Funciona neutralizando la verificación de bloqueo en una copia del splloader, y dejando que BROM ejecute esa copia neutralizada — el simple hecho de correrla es lo que voltea la bandera de desbloqueo en `miscdata`. No existe un paso de "restauración" separado para esa bandera.
 
-```text
-w splloader splloader.bin
-w misc misc-wipe.bin
-```
+Resumen de la secuencia verificada (ver `README_ES.md`, Pasos 1–5, para los comandos exactos):
 
-`misc-wipe.bin` activa el borrado requerido por el proceso de desbloqueo.
+1. Extraer el `splloader` y `uboot` originales del teléfono (`r splloader`, `r uboot`) y respaldarlos.
+2. Generar `spl-unlock.bin` a partir del `splloader.bin` extraído usando `gen_spl-unlock` — es el splloader original con la verificación de bloqueo eliminada.
+3. Reemplazar temporalmente la partición `uboot` con `fdl2-cboot.bin`, una copia cooperativa de FDL2 que ejecutará lo que se cargue después (el `uboot` stock se negaría).
+4. Cargar y ejecutar `spl-unlock.bin` a través de BROM (`fdl spl-unlock.bin`). Ejecutarlo — no escribirlo en ninguna partición — es lo que voltea la bandera de desbloqueo en `miscdata`.
+5. Verificar la bandera directamente leyendo `miscdata` (`read_part miscdata`).
+6. Restaurar los respaldos originales de `splloader` y `uboot`, y luego escribir `misc-wipe.bin` para forzar el restablecimiento de fábrica que requiere el desbloqueo.
 
 Después del reinicio se observó:
 
@@ -599,305 +586,11 @@ vbmeta_a mínimamente modificado
 - Los descriptores AVB coinciden con stock.
 - La firma de `vbmeta_a` live falla.
 - LK está desbloqueado y en estado naranja.
-- NetHunter Lite funciona sobre este estado rooteado.
-
-### Lo que no está comprobado
-
-- Que el kernel personalizado llegue a iniciar Android.
-- Que el slot B haya sido utilizado correctamente durante todos los intentos.
-- Que el fallo del kernel tenga una única causa.
-- Que todos los adaptadores Wi-Fi compatibles con NetHunter funcionen.
-- Que el cargador automático de módulos AR9271 sea seguro.
-- Que la pila inalámbrica híbrida sea estable para uso continuo.
 
 ---
 
-## 14. Investigación del kernel personalizado
 
-Un candidato de kernel personalizado fue construido y probado, pero el teléfono terminó regresando al estado stock o falló durante el arranque.
-
-El error observado fue:
-
-```text
-Attempted to kill init! exitcode=0x00007f00
-```
-
-### Teoría de fallo con mayor respaldo
-
-```text
-kernel personalizado
-        |
-        v
-vendor_boot stock con módulos, fstab y DTB stock
-        |
-        v
-dtbo stock
-        |
-        v
-incompatibilidad ABI o dependencia UFS/reguladores
-        |
-        v
-fallo de UFS o ausencia de /dev/block/sda*
-        |
-        v
-fallo de first-stage mount
-        |
-        v
-init termina
-        |
-        v
-Attempted to kill init! exitcode=0x00007f00
-```
-
-### Riesgos técnicos específicos
-
-- `CONFIG_SCSI_UFS_SPRD=y` integra el controlador UFS en el kernel.
-- Si `CONFIG_REGULATOR_SC2730` no está disponible, el UFS integrado puede no obtener sus fuentes de alimentación.
-- El nodo UFS depende de rieles como:
-  - `vcc`
-  - `vddgen0`
-  - `avdd12`
-  - `avdd18`
-  - `vddcore`
-  - `vddmodem`
-- Los módulos stock usan versionado de símbolos.
-- `CONFIG_MODVERSIONS=y` hace relevantes los CRC de símbolos.
-- Una diferencia en `module_layout` puede impedir que carguen módulos críticos.
-- El fallo anterior alrededor de `printk_cpuid.ko` es compatible con una discrepancia de CRC.
-- `ufs_sprd.ko`, `rpmb.ko`, `sprd-pmic-spi.ko` y `sc2730-regulator.ko` forman parte del camino crítico.
-
-### Nivel de certeza
-
-Esta cadena es una teoría técnica fuertemente respaldada por la evidencia de `vendor_boot`, DTB, DTBO y módulos. No es todavía una traza runtime completa que pruebe una única causa.
-
----
-
-## 15. Reconstrucción del entorno ABI para módulos externos
-
-La fase de headers y módulos dejó de ser teórica. Se reconstruyó un entorno que produjo módulos capaces de cargar en el kernel stock real.
-
-### Entorno confirmado
-
-| Elemento | Valor |
-|---|---|
-| Kernel objetivo | `5.15.178-android13-8-00012-g4ea0fcb5d130-ab13530115` |
-| Commit common-kernel | `4ea0fcb5d1308f2f5a5dec0a3a5c8f1b261e00c7` |
-| Toolchain | Android Clang 14.0.7 |
-| Clang | `clang-r450784e` |
-| Config base | `/proc/config.gz` live |
-| `CONFIG_MODULES` | Activado |
-| `CONFIG_MODVERSIONS` | Activado |
-| `Module.symvers` | Coincidente |
-| CRC de `module_layout` | `0x0222dd63` |
-
-### Lo que esto demuestra
-
-- Kali 3 puede compilar módulos externos para el Cubot.
-- Los módulos pueden pasar la validación de versión y símbolos.
-- El kernel stock puede cargar módulos externos.
-- No es obligatorio reemplazar todo el kernel para añadir determinadas funciones.
-- La dependencia completa de cada driver sigue siendo crítica.
-
----
-
-## 16. NetHunter y Netgear WNA1100 / AR9271
-
-Se logró el primer soporte Wi-Fi USB confirmado sobre el kernel stock rooteado.
-
-### Hardware probado
-
-| Campo | Valor |
-|---|---|
-| Adaptador | Netgear WNA1100 |
-| Chipset | Qualcomm Atheros AR9271 |
-| USB ID | `0846:9030` |
-| Driver | `ath9k_htc` |
-
-### Pila de módulos utilizada
-
-```text
-mac80211.ko
-ath.ko
-ath9k_hw.ko
-ath9k_common.ko
-ath9k_htc.ko
-```
-
-Orden manual de carga:
-
-```text
-mac80211
-ath
-ath9k_hw
-ath9k_common
-ath9k_htc
-```
-
-Firmware utilizado:
-
-```text
-htc_9271.fw
-ath9k_htc/htc_9271-1.4.0.fw
-```
-
-### Arquitectura híbrida utilizada
-
-```text
-cfg80211 stock del Cubot
-sprd_wlan_combo stock del Cubot
-mac80211 externo
-ath/ath9k externo
-```
-
-No debe cargarse un `cfg80211.ko` externo encima del `cfg80211` stock. El Wi-Fi interno Unisoc depende de la combinación stock `cfg80211` + `sprd_wlan_combo`.
-
-### Resultado validado
-
-- El USB AR9271 fue detectado.
-- El firmware cargó.
-- Apareció `wlan1`.
-- El modo monitor funcionó.
-- La inyección de paquetes funcionó en laboratorio autorizado.
-- Wifite pudo utilizar el adaptador.
-
-Comandos de prueba:
-
-```sh
-ip link set wlan1 down
-iw dev wlan1 set type monitor
-ip link set wlan1 up
-iw dev wlan1 info
-```
-
-Estado observado:
-
-```text
-Interface wlan1
-        type monitor
-        channel 1 (2412 MHz), width: 20 MHz
-        txpower 20.00 dBm
-```
-
-### Lo que este logro demuestra
-
-- El Cubot puede usar Wi-Fi USB externo con NetHunter Lite.
-- La ABI de módulos fue alineada correctamente.
-- AR9271 puede ofrecer modo monitor e inyección en este build.
-- El resultado se obtuvo sin arrancar un kernel personalizado.
-
-### Lo que no demuestra
-
-- Que el módulo Magisk automático sea seguro.
-- Que la pila híbrida sea estable indefinidamente.
-- Que otros chipsets funcionen sin trabajo adicional.
-- Que Realtek o MediaTek estén resueltos.
-- Que el kernel personalizado funcione.
-
----
-
-## 17. Riesgos del cargador automático AR9271
-
-La carga manual funcionó, pero experimentos posteriores con empaquetado/carga automática se asociaron con inestabilidad del touchscreen o de entrada.
-
-Por seguridad técnica:
-
-- Mantener deshabilitado el módulo Magisk experimental.
-- No cargar la pila automáticamente al arrancar.
-- No descargar el `cfg80211` stock.
-- No descargar `sprd_wlan_combo`.
-- No sustituir módulos Wi-Fi vendor sin una construcción coherente.
-- Probar un solo stack y un solo adaptador a la vez.
-
-La afirmación segura es:
-
-```text
-AR9271 puede funcionar manualmente en el kernel stock rooteado
-usando módulos externos compatibles.
-```
-
-La afirmación no demostrada sería:
-
-```text
-AR9271 está listo para uso permanente mediante un módulo Magisk.
-```
-
----
-
-## 18. Próximos adaptadores y líneas de investigación
-
-### Prioridad actual
-
-1. Adaptador TP-Link Realtek.
-2. Adaptador ALFA MediaTek.
-3. Endurecimiento del cargador AR9271.
-4. Construcción de una pila inalámbrica coherente.
-
-### Caminos de driver considerados
-
-| Ruta | Riesgo estimado | Motivo |
-|---|---|---|
-| Realtek `88XXau` vendor | Verde/amarillo | Puede evitar depender de un `mac80211` externo |
-| Realtek `rtw88_usb` | Amarillo/rojo | Normalmente depende de `mac80211` |
-| MediaTek `mt76x0u` | Amarillo/rojo | Requiere `mt76` y probablemente `mac80211` |
-| Atheros `ath9k_htc` | Rojo para producción | Funciona, pero la integración automática no es estable |
-
-Inventario inicial recomendado:
-
-```sh
-lsusb -nn | grep -Ei \
-'Realtek|MediaTek|Ralink|Atheros|Qualcomm|TP-Link|Alfa|Netgear|0bda|148f|0cf3|0846'
-```
-
-Para cada adaptador debe registrarse:
-
-- Vendor ID.
-- Product ID.
-- Modelo comercial.
-- Chipset real.
-- Driver esperado.
-- Dependencias.
-- Necesidad o no de `mac80211`.
-- Compatibilidad con el `cfg80211` stock.
-- Efectos en touchscreen, Wi-Fi interno, USB y estabilidad.
-
----
-
-## 19. Objetivo de arquitectura inalámbrica a largo plazo
-
-La solución robusta no consiste simplemente en cambiar opciones de `=m` a `=y`.
-
-Una pila coherente debería considerar componentes construidos desde un entorno compatible:
-
-```text
-cfg80211
-mac80211
-ath
-ath9k_hw
-ath9k_common
-ath9k_htc
-sprd_wlan_combo
-unisoc_wcn_bsp
-dependencias SIPC/WCN requeridas
-```
-
-El problema real es la compatibilidad de subsistemas, símbolos, configuraciones y ABI.
-
----
-
-## 20. Condiciones para detener una prueba
-
-Detener inmediatamente si:
-
-- Un driver exige reemplazar `cfg80211` stock sin un plan coherente.
-- Aparecen símbolos no exportados que requieren parches inseguros.
-- La carga afecta touchscreen, entrada, Wi-Fi interno, USB o estabilidad.
-- El firmware requerido no puede distribuirse legalmente.
-- La prueba exige escribir imágenes activas sin respaldo.
-- Se pierde la capacidad de regresar al kernel stock conocido.
-
----
-
-## 21. Política del repositorio
+## 14. Política del repositorio
 
 Este repositorio sí debe almacenar:
 
@@ -923,7 +616,7 @@ Este repositorio no debe almacenar:
 
 ---
 
-## 22. Estado actual del proyecto
+## 15. Estado actual del proyecto
 
 ### Completado
 
@@ -937,26 +630,10 @@ Este repositorio no debe almacenar:
 - Comparación de `dtbo_a`.
 - Comparación de `vbmeta_a`.
 - Identificación de la advertencia LK.
-- Reconstrucción del entorno ABI.
-- Carga de módulos externos.
-- Soporte manual AR9271.
-- Modo monitor.
-- Prueba de inyección.
-- Uso de Wifite.
-
-### Pendiente
-
-- Convertir el soporte AR9271 en una solución estable.
-- Probar el TP-Link Realtek por su ruta adecuada.
-- Probar el ALFA MediaTek por su ruta adecuada.
-- Construir una pila Wi-Fi coherente.
-- Resolver de forma concluyente el arranque del kernel personalizado.
-- Obtener una traza runtime completa del fallo de first-stage init.
-- Validar UFS, reguladores y módulos en un kernel custom coherente.
 
 ---
 
-## 23. Conclusión final
+## 16. Conclusión final
 
 El Cubot KingKong ES3 analizado tiene un root funcional y reproducible basado en:
 
@@ -969,28 +646,13 @@ bootloader LK desbloqueado
 + init_boot_a parcheado por Magisk
 ```
 
-El kernel personalizado continúa siendo un proyecto separado. La evidencia apunta a incompatibilidades alrededor de UFS, reguladores SC2730, módulos stock y `CONFIG_MODVERSIONS`, pero todavía no existe una traza definitiva que reduzca el fallo a una sola causa.
-
-La investigación de módulos externos sí produjo un resultado firme: el kernel stock acepta módulos construidos contra su ABI exacta, y el adaptador Netgear WNA1100 / AR9271 logró modo monitor e inyección con NetHunter Lite.
-
-Ese resultado permite continuar el desarrollo de capacidades NetHunter sin confundirlo con la validación pendiente del kernel personalizado.
-
 ---
 
-## 24. Informes originales en inglés
+## 17. Informes originales en inglés
 
-Este documento consolida y traduce los siguientes archivos:
+Este documento consolida y traduce hallazgos de:
 
 - [`README.md`](README.md)
-- [`REPORT_INDEX.md`](REPORT_INDEX.md)
-- [`BOOT_CHAIN_FINDINGS.md`](BOOT_CHAIN_FINDINGS.md)
 - [`ROOTING_GUIDE.md`](ROOTING_GUIDE.md)
-- [`REPORT_3WAY_BOOT_COMPARISON.md`](REPORT_3WAY_BOOT_COMPARISON.md)
-- [`REPORT_INIT_BOOT_STOCK_VS_LIVE.md`](REPORT_INIT_BOOT_STOCK_VS_LIVE.md)
-- [`REPORT_VENDOR_BOOT_STOCK_VS_LIVE.md`](REPORT_VENDOR_BOOT_STOCK_VS_LIVE.md)
-- [`REPORT_DTBO_STOCK_VS_LIVE.md`](REPORT_DTBO_STOCK_VS_LIVE.md)
-- [`REPORT_VBMETA_STOCK_VS_LIVE.md`](REPORT_VBMETA_STOCK_VS_LIVE.md)
-- [`NEXT_PHASE_HEADERS_MODULES_PLAN.md`](NEXT_PHASE_HEADERS_MODULES_PLAN.md)
-- [`NETHUNTER_NETGEAR_AR9271_RESULTS.md`](NETHUNTER_NETGEAR_AR9271_RESULTS.md)
 
-Los informes originales siguen siendo la fuente más detallada para tablas completas, artefactos de comparación y contexto histórico.
+Los reportes técnicos detallados por componente (comparaciones stock-vs-live, hashes, y demás evidencia cruda) se conservan en el archivo interno del proyecto, no en este repositorio público.

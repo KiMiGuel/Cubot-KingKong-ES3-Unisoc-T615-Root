@@ -108,32 +108,28 @@ lsusb | grep -i '1782:4d00\|spreadtrum\|unisoc'
 
 ## FDL2 Access
 
-The working access path used `loadexec`, not `exec_addr` or `exec_addr2`.
+The verified working access path uses `exec_addr`, not `loadexec`.
 
-From the unlock folder:
+From the unlock package folder:
 
 ```sh
-sudo ./spd_dump --verbose 2 --wait 300 loadexec custom_exec_no_verify_65015f08.bin fdl fdl1-dl.bin 0x65000800 fdl fdl2-dl.bin 0x9efffe00 exec
+spd_dump --wait 300 exec_addr 0x65015f08 fdl fdl1-dl.bin 0x65000800 fdl fdl2-dl.bin 0x9efffe00 exec
 ```
 
-Expected result:
-
-```text
-FDL2 >
-```
-
-Once at `FDL2>`, the tool has low-level partition read/write access. Treat every write as destructive.
+`exec_addr 0x65015f08` is the CVE-2022-38694 exploit entry point — it's what gets BROM to accept and run the unsigned FDL1/FDL2 payloads that follow. Once FDL1 and FDL2 are loaded, the tool has low-level partition read/write access. Treat every write as destructive.
 
 ## Bootloader Unlock Flow
 
-The earlier working unlock flow wrote the patched bootloader component and wipe trigger:
+The verified flow does not write `splloader` directly. It works by neutering the lock check in a copy of `splloader`, then letting BROM run that neutered copy — the act of running it flips the unlock flag in `miscdata`. There is no separate "restore" step for the flag itself.
 
-```text
-w splloader splloader.bin
-w misc misc-wipe.bin
-```
+Summary of the verified sequence (see `README.md` Steps 1–5 for the exact commands):
 
-`misc-wipe.bin` triggers the required wipe/factory reset behavior for the unlock flow.
+1. Dump the phone's original `splloader` and `uboot` off the phone (`r splloader`, `r uboot`) and back them up.
+2. Generate `spl-unlock.bin` from the dumped `splloader.bin` using `gen_spl-unlock` — this is the original splloader with its lock check removed.
+3. Temporarily replace the `uboot` partition with `fdl2-cboot.bin`, a cooperative FDL2 copy that will run whatever is loaded next (stock `uboot` would refuse).
+4. Load and run `spl-unlock.bin` through BROM (`fdl spl-unlock.bin`). Running it — not writing it to any partition — is what flips the unlock flag in `miscdata`.
+5. Verify the flag directly by reading `miscdata` back (`read_part miscdata`).
+6. Restore the original `splloader` and `uboot` backups, then write `misc-wipe.bin` to trigger the factory reset the unlock requires.
 
 After reboot:
 
@@ -273,105 +269,6 @@ patched init_boot_a
   v
 Magisk root
 ```
-
-## NetHunter Notes
-
-NetHunter Lite runs on this rooted stock-kernel state, but NetHunter userspace does not automatically provide Android kernel drivers.
-
-The major update is that the stock Cubot kernel can load externally built modules when they are built against the correct live ABI.
-
-Confirmed build target:
-
-```text
-5.15.178-android13-8-00012-g4ea0fcb5d130-ab13530115
-```
-
-Confirmed module-build requirements:
-
-- exact common-kernel source commit: `4ea0fcb5d1308f2f5a5dec0a3a5c8f1b261e00c7`
-- live `/proc/config.gz`
-- matching `Module.symvers`
-- Android Clang 14.0.7 / `clang-r450784e`
-- matching `module_layout` CRC: `0x0222dd63`
-
-### Netgear WNA1100 / AR9271 result
-
-The Netgear WNA1100 was validated on the rooted stock Cubot kernel using the `ath9k_htc` stack.
-
-Validated:
-
-- AR9271 USB adapter detected
-- firmware loaded
-- `wlan1` appeared
-- monitor mode worked
-- injection test worked in an authorized lab
-- Wifite could use the adapter
-
-Module stack used:
-
-```text
-mac80211.ko
-ath.ko
-ath9k_hw.ko
-ath9k_common.ko
-ath9k_htc.ko
-```
-
-Firmware used:
-
-```text
-htc_9271.fw
-ath9k_htc/htc_9271-1.4.0.fw
-```
-
-Safety warning: the current automatic/Magisk loader is experimental and should remain disabled until redesigned. The verified milestone is manual external-module functionality, not a production-safe install package.
-
-See `NETHUNTER_NETGEAR_AR9271_RESULTS.md` for details.
-
-### Remaining adapter work
-
-Do not assume every NetHunter-supported chipset now works on the Cubot.
-
-Next adapters to triage:
-
-- TP-Link Realtek adapter, likely `RTL8811AU` / `RTL8812AU` family
-- ALFA adapter, likely MediaTek `MT7610U` / `mt76x0u` family
-
-Each must be identified by USB ID before choosing a driver path.
-
-## Custom Kernel Warning
-
-The previous custom kernel boot failure is likely unrelated to Magisk root itself.
-
-The most plausible risk chain is:
-
-```text
-custom boot kernel
-  |
-  v
-stock vendor_boot modules, fstab, DTB, and DTBO overlays
-  |
-  v
-module ABI or UFS/regulator mismatch
-  |
-  v
-first-stage mount failure
-  |
-  v
-Attempted to kill init! exitcode=0x00007f00
-```
-
-Specific risk areas:
-
-- `CONFIG_MODVERSIONS`
-- `module_layout` CRC mismatch
-- `ufs_sprd.ko`
-- `sc2730-regulator.ko`
-- `sprd-pmic-spi.ko`
-- UFS device path `/dev/block/sda*`
-- SC2730 regulator rails used by the UFS DT node
-
-Custom kernel work should proceed through `NEXT_PHASE_HEADERS_MODULES_PLAN.md`, not by assuming the current root setup validates a custom boot image.
 
 ## Files Not Stored Here
 

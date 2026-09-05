@@ -4,13 +4,14 @@
 
 **Unisoc T615 (UMS9230_6h10) · UFS · slots A/B · build `CUBOT_KINGKONG_ES_3_F071_V16_20260309`**
 
-Sigue el mismo flujo de 5 pasos del clásico script `unlock_autopatch_9230` — más la preparación de herramientas (Paso 0) y el root con Magisk (Paso 6).
+Dos partes: desbloquear el bootloader (Pasos 1–5, la secuencia clásica BROM/FDL2) y rootear con Magisk (Paso 6) — con preparación de herramientas primero (Paso 0).
 
 > ⚠️ **Lee esto primero**
 > - 🟡 Dificultad: media/avanzada. Si no sabes lo que estás haciendo, detente aquí.
 > - 💥 **Esto borra todo el dispositivo** — respalda tus datos primero.
 > - 🔌 **Solo puerto y cable USB 2.0** — el USB 3.0 causa fallos de conexión en este dispositivo.
 > - 🐧 Usa **Linux** (Kali). Ni macOS, ni Windows.
+> - 📁 **Ejecuta cada comando desde dentro de la carpeta del paquete** — `spd_dump` toma los archivos desde el directorio actual; trabajar desde otro lugar falla en silencio.
 > - 🎯 Verificado únicamente en el build indicado arriba — vuelve a verificar antes de usarlo en cualquier otro build.
 > - 🧯 ¿Se brickeó a la mitad? El modo BROM siempre responde — siempre puedes recuperarlo.
 > - ☢️ `prodnv` / `nvitem` / `l_fixnv` contienen datos de calibración de fábrica — nunca los leas, escribas ni borres, en ningún paso.
@@ -48,6 +49,13 @@ Verifica que compilaste lo correcto — ambas comprobaciones deben pasar:
 ```
 ./spd_dump --help          # NO debe listar un comando "baudrate"
 grep reopen_port common.c  # debe encontrar el fix de reconexión
+```
+
+También necesitarás `adb` y `fastboot` de Android para el Paso 6 — instálalos ahora para no quedarte atascado a mitad de la guía:
+
+```
+sudo apt install android-tools-adb android-tools-fastboot
+adb --version && fastboot --version
 ```
 
 ### 📦 De dónde viene cada archivo
@@ -149,7 +157,7 @@ No confías en lo que la herramienta imprimió — lees la bandera directamente 
 spd_dump exec_addr 0x65015f08 fdl fdl1-dl.bin 0x65000800 fdl fdl2-dl.bin 0x9efffe00 exec verbose 2 read_part miscdata 8192 64 m.bin reset
 ```
 
-Revisa `m.bin`: 64 bytes en cero = sigue bloqueado (repite el Paso 3) · una cadena de 32 bytes + dos hashes de 16 bytes = **desbloqueado** ✅. Un timeout al final de este paso es normal.
+Revisa `m.bin` (`xxd m.bin`): 64 bytes en cero = sigue bloqueado (repite el Paso 3) · una cadena de 32 bytes + dos hashes de 16 bytes = **desbloqueado** ✅. Un timeout al final de este paso es normal.
 
 ---
 
@@ -168,6 +176,8 @@ Deja que el teléfono haga el restablecimiento de fábrica y arranque. 🟠 **La
 ## 🪄 Paso 6 — Root con Magisk
 
 El bootloader ya está desbloqueado — ahora el root es simplemente que Magisk parchee `init_boot.img` (por eso lo extrajiste en el Paso 0) y flashear la copia parcheada. Se hace en **fastbootd** (fastboot en espacio de usuario), no en el bootloader normal.
+
+Si todavía no lo tienes, instala la app de Magisk en el teléfono: descarga el APK más reciente desde [los releases de Magisk en GitHub](https://github.com/topjohnwu/Magisk/releases) e instálalo (permite "instalar de orígenes desconocidos" si te lo pide).
 
 Arranca Android → Ajustes → Acerca del teléfono → toca **Número de compilación** ×7 → Opciones de desarrollador → **Depuración USB**. Después:
 
@@ -207,12 +217,9 @@ Abre Magisk → root activo. 🎉 **Listo — desbloqueado y rooteado.**
 
 ## 📚 ¿Quieres saber el porqué? La investigación completa está aquí
 
-- [`ROOTING_GUIDE.md`](ROOTING_GUIDE.md) — guía extendida con la evidencia detrás de cada paso
-- [`BOOT_CHAIN_FINDINGS.md`](BOOT_CHAIN_FINDINGS.md) — análisis de la cadena de arranque / AVB
+- [`ROOTING_GUIDE.md`](ROOTING_GUIDE.md) — guía extendida con la evidencia detrás de cada paso (en inglés)
 - [`INVESTIGACION_COMPLETA_ES.md`](INVESTIGACION_COMPLETA_ES.md) — investigación completa en español
-- [`REPORT_INDEX.md`](REPORT_INDEX.md) — serie de comparaciones de particiones stock vs. en vivo
-- [`UNLOCK_ROOT_RESEARCH.md`](UNLOCK_ROOT_RESEARCH.md) — la historia detrás del desbloqueo: cómo se logró el root, explicada en lenguaje sencillo (en inglés)
 
-Este repositorio guarda **solo documentos y hashes** — nada de imágenes de firmware, PACs, volcados de particiones ni archivos `.ko`. Documenta el estado de un dispositivo/build específico; no lo tomes como una receta universal de rooteo.
+Este repositorio guarda **solo documentos** — nada de imágenes de firmware, PACs, volcados de particiones, manifiestos de hashes ni archivos `.ko`. Documenta el estado de un dispositivo/build específico; no lo tomes como una receta universal de rooteo.
 
 🙏 Construido sobre el [toolkit de CVE-2022-38694 de TomKing062](https://github.com/TomKing062/CVE-2022-38694_unlock_bootloader) (`spd_dump`/`spreadtrum_flash`, `gen_spl-unlock`, `chsize`), [PAC-Extractor](https://github.com/bismoy-bot/PAC-Extractor) de Bismoy Ghosh, y [Magisk](https://github.com/topjohnwu/Magisk) de topjohnwu.

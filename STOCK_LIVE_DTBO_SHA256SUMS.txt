@@ -1,2 +1,0 @@
-f16238c3ddc31dc5015d42523d29e5fa74ca2b3b43df6fbaed9aad11c18f5672  /home/kali/pacextractor/pac_out/dtbo.img
-f16238c3ddc31dc5015d42523d29e5fa74ca2b3b43df6fbaed9aad11c18f5672  ../slot_a_ordered/01_dtbo_a_live.img

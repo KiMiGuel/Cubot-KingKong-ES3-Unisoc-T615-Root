@@ -4,13 +4,14 @@
 
 **Unisoc T615 (UMS9230_6h10) · UFS · A/B slots · build `CUBOT_KINGKONG_ES_3_F071_V16_20260309`**
 
-Follows the same 5-step flow as the classic `unlock_autopatch_9230` script — plus tool prep (Step 0) and Magisk root (Step 6).
+Two parts: unlock the bootloader (Steps 1–5, the classic BROM/FDL2 sequence) and root with Magisk (Step 6) — with tool prep first (Step 0).
 
 > ⚠️ **Read this first**
 > - 🟡 Difficulty: medium/hard. If you don't know what you're doing, stop here.
 > - 💥 **This wipes the device** — back up first.
 > - 🔌 **USB 2.0 port + cable only** — USB 3.0 causes connection failures on this device.
 > - 🐧 Use **Linux** (Kali). Not macOS, not Windows.
+> - 📁 **Run every command from inside the package folder** — `spd_dump` picks up payload files from the current directory; working elsewhere breaks silently.
 > - 🎯 Verified only on the build above — re-verify before using on any other build.
 > - 🧯 Bricked mid-way? BROM mode always answers — you can always recover.
 > - ☢️ `prodnv` / `nvitem` / `l_fixnv` hold factory calibration data — never read/write/erase them, at any step.
@@ -48,6 +49,13 @@ Verify you built the right thing — both checks must pass:
 ```
 ./spd_dump --help          # must NOT list a "baudrate" command
 grep reopen_port common.c  # must find the reconnect fix
+```
+
+You'll also need Android's `adb` and `fastboot` for Step 6 — install them now so you're not stuck mid-guide:
+
+```
+sudo apt install android-tools-adb android-tools-fastboot
+adb --version && fastboot --version
 ```
 
 ### 📦 Where every file comes from
@@ -149,7 +157,7 @@ You don't trust what the tool printed — you read the flag itself out of `miscd
 spd_dump exec_addr 0x65015f08 fdl fdl1-dl.bin 0x65000800 fdl fdl2-dl.bin 0x9efffe00 exec verbose 2 read_part miscdata 8192 64 m.bin reset
 ```
 
-Check `m.bin`: 64 zero bytes = still locked (repeat Step 3) · 32-byte string + two 16-byte hashes = **unlocked** ✅. A trailing timeout here is normal.
+Check `m.bin` (`xxd m.bin`): 64 zero bytes = still locked (repeat Step 3) · 32-byte string + two 16-byte hashes = **unlocked** ✅. A trailing timeout here is normal.
 
 ---
 
@@ -168,6 +176,8 @@ Let the phone factory-reset and boot. 🟠 **Orange/unlocked warning screen = su
 ## 🪄 Step 6 — Root with Magisk
 
 The bootloader is unlocked — now root is just Magisk patching `init_boot.img` (that's why you extracted it in Step 0) and flashing the patched copy. Done in **fastbootd** (userspace fastboot), not the plain bootloader.
+
+If you haven't already, install the Magisk app on the phone: download the latest APK from [Magisk's GitHub releases](https://github.com/topjohnwu/Magisk/releases) and install it (allow "install from unknown sources" if prompted).
 
 Boot Android → Settings → About Phone → tap Build Number ×7 → Developer Options → **USB debugging**. Then:
 
@@ -208,11 +218,8 @@ Open Magisk → root active. 🎉 **Done — unlocked and rooted.**
 ## 📚 Want the "why"? Full research lives here
 
 - [`ROOTING_GUIDE.md`](ROOTING_GUIDE.md) — long-form guide with the evidence behind each step
-- [`BOOT_CHAIN_FINDINGS.md`](BOOT_CHAIN_FINDINGS.md) — boot-chain / AVB analysis
-- [`INVESTIGACION_COMPLETA_ES.md`](INVESTIGACION_COMPLETA_ES.md) — investigación completa en español
-- [`REPORT_INDEX.md`](REPORT_INDEX.md) — stock-vs-live partition comparison series
-- [`UNLOCK_ROOT_RESEARCH.md`](UNLOCK_ROOT_RESEARCH.md) — the story behind the unlock: how root was achieved, in plain language
+- [`INVESTIGACION_COMPLETA_ES.md`](INVESTIGACION_COMPLETA_ES.md) — full research, in Spanish
 
-This repo stores **docs and hashes only** — no firmware images, PACs, partition dumps, or `.ko` files. It documents one device/build state; don't treat it as a universal rooting recipe.
+This repo stores **docs only** — no firmware images, PACs, partition dumps, hash manifests, or `.ko` files. It documents one device/build state; don't treat it as a universal rooting recipe.
 
 🙏 Built on [TomKing062's CVE-2022-38694 toolkit](https://github.com/TomKing062/CVE-2022-38694_unlock_bootloader) (`spd_dump`/`spreadtrum_flash`, `gen_spl-unlock`, `chsize`), [PAC-Extractor](https://github.com/bismoy-bot/PAC-Extractor) by Bismoy Ghosh, and [Magisk](https://github.com/topjohnwu/Magisk) by topjohnwu.

@@ -1,4 +1,0 @@
-3113ec9523f41a8a667c594c8590731876233b82d80c9c13a551f697f240f1da  /home/kali/pacextractor/pac_out/boot-gki.img
-3113ec9523f41a8a667c594c8590731876233b82d80c9c13a551f697f240f1da  ../slot_a_ordered/02_boot_a_live.img
-de91093263b7c229c8efea1cb4fa7d1dc1ed5bdfd3238f05aeb8fd944bfd91af  /home/kali/Kernels/CANDIDATE/boot_b.img
-7670cfb93a8b53e78aa2af4e99994500312bc57b28ddf69f6f2b2f0e4424e8a2  /home/kali/Kernels/CANDIDATE/boot_b_magisk.img
