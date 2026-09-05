@@ -209,6 +209,7 @@ Abre Magisk → root activo. 🎉 **Listo — desbloqueado y rooteado.**
 | `LIBUSB_ERROR_BUSY` | `sudo systemctl stop ModemManager`, reconecta |
 | `LIBUSB_ERROR_NO_DEVICE` | Inicia `spd_dump` primero, **después** conecta el teléfono |
 | `find port failed` | Cierra y vuelve a ejecutar el mismo comando |
+| Se desconecta / no detecta el teléfono | Asegúrate de estar en USB 2.0 |
 | Dos `CHECK_BAUD FAIL` → `device removed, exiting...` | A tu build de `spd_dump` le falta el fix de reconexión — recompila desde el código fuente del paquete (`common.c` debe contener `reopen_port`) |
 | Boot loop / soft brick en cualquier punto | BROM (Paso 1) siempre responde — reflashea el firmware stock y repite la guía |
 | ☠️ En `spd_dump` | **Nunca** ejecutes `repartition`, `erase_all` ni `ufs repart/rawerase/setattr` — truncan la GPT |
